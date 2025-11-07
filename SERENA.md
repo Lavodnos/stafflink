@@ -41,3 +41,22 @@
 - Frontend añade `AuthProvider`, `useAuth` y `LoginForm`; router protege `/` y muestra `LoginPage`.
 - `npm run lint` y `npm run build` verificados, `vite.config.ts` proxea `/api` → `http://localhost:8000`.
 - Para desarrollo: `cd backend && source venv/bin/activate && python manage.py runserver`, `cd frontend && npm run dev`.
+
+## Guía para Próxima Sesión
+1. **Leer `CEREBRO.md` en `/home/lavodnos/code/SERVICES IAM GEA/`**: contiene el resumen maestro (repos, puertos Docker, tareas pendientes).
+2. **Sync repos**: `git status` en ambos (`SERVICES IAM GEA`, `stafflink`), luego `git add`, `git commit`, `git push`. En la nueva máquina solo `git clone`/`pull` y seguir esta SERENA.
+3. **Variables locales**: copiar `backend/.env.example` → `backend/.env`, ajustar `IAM_BASE_URL`, `IAM_APP_ID`, cookies y CORS; en frontend copiar `.env.example` → `.env` si se requiere una URL distinta.
+4. **Levantar entorno IAM**: `cd /home/lavodnos/code/SERVICES IAM GEA && docker compose up --build -d`. Confirmar puertos (API 58000, perimeter 58080, Adminer 58082).
+5. **Levantar Stafflink**:
+   - Backend: `cd backend && source venv/bin/activate && python manage.py runserver 0.0.0.0:8000`.
+   - Frontend: `cd frontend && npm install` (primera vez) y `npm run dev`.
+6. **Probar login manual**: abrir `http://localhost:5173/login`, usar credenciales válidas del IAM (asegúrate de conocer `app_id` habilitado).
+7. **Pruebas automáticas**:
+   - Backend: `cd backend && source venv/bin/activate && python manage.py test`.
+   - Frontend lint/build: `cd frontend && npm run lint && npm run build`.
+8. **Siguientes pasos técnicos**:
+   - Implementar `/api/auth/logout/` y `/api/auth/session/` (introspect) en backend, exponer endpoints al frontend y añadir botón/logout handler.
+   - Guardar info de sesión (roles/scopes) en contexto y usarla para condicionar futuras vistas (campañas, postulantes, exportaciones Smart).
+   - Diseñar DTOs y almacenamiento local para las entidades S1 (campañas, reclutadores, postulantes) basados en alcance de `01-SCOPE.md`.
+
+Mantén este archivo y `CEREBRO.md` sincronizados en cada push/pull para que cualquier agente pueda retomar sin perder contexto.
