@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Montserrat Variable", "Montserrat", "Futura Std", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  --color-gea-midnight: #0b1658;
+  --color-gea-blue-deep: #00124e;
+  --color-gea-blue: #005fa9;
+  --color-gea-green: #026937;
+  --color-gea-green-light: #7a9a32;
+  --color-gea-green-petrol: #004021;
+  --color-gea-red: #9d162e;
+  --color-gea-orange: #e96f36;
+  --color-gea-slate: #8785ab;
+  --color-gea-white: #ffffff;
+
+  --color-primary: var(--color-gea-midnight);
+  --color-secondary: var(--color-gea-blue);
+  --color-accent: var(--color-gea-green);
+  --color-accent-strong: var(--color-gea-green-light);
+}
+
+@plugin "@tailwindcss/forms";

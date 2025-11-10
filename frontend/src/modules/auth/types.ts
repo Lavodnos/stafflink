@@ -18,13 +18,22 @@ export interface LoginResponse {
     [key: string]: unknown;
   } | null;
   [key: string]: unknown;
+  forced?: boolean;
+}
+
+export interface SessionResponse {
+  active: boolean;
+  user?: LoginResponse['user'];
+  session?: Record<string, unknown> | null;
 }
 
 export interface AuthState {
   isAuthenticated: boolean;
+  isReady: boolean;
   isLoading: boolean;
   user: LoginResponse['user'];
   lastError?: string;
   login(payload: LoginPayload): Promise<LoginResponse>;
+  logout(): Promise<void>;
   clearError(): void;
 }

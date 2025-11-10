@@ -20,7 +20,8 @@
 
 ### Integración Planeada
 - Stafflink usará las APIs de IAM para autenticación y control de acceso.
-- Próximo entregable: implementar flujo de login en frontend y backend reutilizando endpoints IAM.
+- El backend ya proxya `/api/auth/login/`, `/api/auth/logout/` e `/api/auth/session/` contra IAM; el frontend consume estos endpoints para iniciar sesión, restaurar cookies existentes y cerrar sesiones únicas (primer intento muestra aviso, segundo intento forzado cierra la sesión remota).
+- Frontend migrado a Tailwind CSS v4 (`src/styles/tailwind.css`) con tokens de color GEA y Montserrat como font-sans. El logo se encuentra en `src/assets/gea-logo.svg` (sustituir por el oficial cuando lo tengamos). `npm run build` ya valida la integración con el plugin de Vite.
 
 ### Notas
 - Mantener line endings UNIX para scripts ejecutados en contenedores.

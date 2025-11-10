@@ -1,5 +1,4 @@
-"""Serializers for the authentication endpoints."""
-
+"""Serializadores para los puntos de conexión de autenticación."""
 from __future__ import annotations
 
 from django.conf import settings

@@ -12,7 +12,7 @@ from .exceptions import IAMServiceError, IAMUnavailableError
 
 
 class IAMClient:
-    """Thin wrapper around httpx to call IAM endpoints."""
+    """Capa delgada para httpx que permite llamar a los endpoints de IAM."""
 
     def __init__(
         self,
@@ -44,11 +44,43 @@ class IAMClient:
 
         return self._post("auth/login", payload)
 
-    def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
+    def logout(self, token: str) -> None:
+        """Invalidar una sesión de IAM a través del punto de conexión de cierre de sesión (logout)."""
+
+        self._post(
+            "auth/logout",
+            payload=None,
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    def introspect(self, token: str) -> dict[str, Any]:
+        """Pregunta a IAM si el token proporcionado sigue activo."""
+
+        return self._post("auth/introspect", {"token": token})
+
+    def _post(
+        self,
+        path: str,
+        payload: dict[str, Any] | None,
+        headers: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
+        return self._request("POST", path, json_data=payload, headers=headers)
+
+    def _request(
+        self,
+        method: str,
+        path: str,
+        *,
+        json_data: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
         url = urljoin(f"{self.base_url}/", path)
+        request_kwargs: dict[str, Any] = {"headers": headers}
+        if json_data is not None:
+            request_kwargs["json"] = json_data
         try:
             with httpx.Client(timeout=self.timeout) as client:
-                response = client.post(url, json=payload)
+                response = client.request(method, url, **request_kwargs)
         except httpx.RequestError as exc:
             raise IAMUnavailableError(detail={"detail": "IAM request failed", "error": str(exc)}) from exc
 
@@ -65,6 +97,6 @@ class IAMClient:
 
 
 def get_iam_client() -> IAMClient:
-    """Helper to lazy-instantiate the IAM client (useful for testing)."""
+    """Función auxiliar para la instanciación diferida del cliente IAM (útil para pruebas)."""
 
     return IAMClient()
