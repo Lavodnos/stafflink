@@ -10,9 +10,8 @@ import { useAuth } from '../modules/auth/useAuth';
 
 function BackgroundShell({ children }: { children: ReactNode }) {
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-gea-blue-deep via-gea-midnight to-black/90 px-4 py-8">
-      <div className="pointer-events-none absolute -top-32 -right-16 h-80 w-80 rounded-full bg-gradient-to-br from-gea-green to-gea-green-light blur-3xl opacity-70" />
-      <div className="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-gradient-to-br from-gea-red to-gea-orange blur-3xl opacity-50" />
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-gea-midnight via-gea-blue-deep to-black px-4 py-8">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,#0b3a78_10%,transparent_45%)] opacity-50" />
       {children}
     </div>
   );

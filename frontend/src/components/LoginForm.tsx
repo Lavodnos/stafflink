@@ -30,66 +30,66 @@ export function LoginForm({ onSubmit, loading = false, errorMessage, infoMessage
       onSubmit={handleSubmit(onSubmit)}
       noValidate
       aria-describedby={errorMessage ? 'login-error' : undefined}
-      className="relative z-10 w-full max-w-xl space-y-4 rounded-[28px] border border-white/15 bg-white/95 p-8 text-gea-midnight shadow-[0_25px_80px_rgba(11,22,88,0.35)]"
+      className="w-full max-w-md space-y-5 rounded-[28px] border border-white/15 bg-white/95 px-8 py-10 text-gea-midnight shadow-[0_25px_80px_rgba(11,22,88,0.35)]"
     >
-      <div className="flex items-center gap-4">
-        <img src={geaLogo} alt="GEA Internacional" className="h-14 w-auto" loading="lazy" />
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-gea-slate">GEA Internacional</p>
-          <h1 className="mt-1 text-3xl font-semibold text-gea-midnight">Stafflink</h1>
-          <p className="text-sm text-gea-slate">Portal de acceso con sesión única IAM</p>
-        </div>
-      </div>
+      <header className="text-center">
+        <img src={geaLogo} alt="GEA Internacional" className="mx-auto h-12 w-auto" loading="lazy" />
+        <p className="mt-3 text-xs font-semibold uppercase tracking-[0.4em] text-gea-slate">GEA Internacional</p>
+        <h1 className="mt-2 text-2xl font-semibold">Portal corporativo</h1>
+        <p className="text-sm text-gea-slate">Sesiones unificadas IAM (política dispositivo único).</p>
+      </header>
 
       {errorMessage ? (
-        <p id="login-error" role="alert" aria-live="polite" className="text-sm font-semibold text-gea-red">
+        <p id="login-error" role="alert" aria-live="polite" className="rounded-2xl border border-gea-red/30 bg-gea-red/5 px-4 py-2 text-sm font-semibold text-gea-red">
           {errorMessage}
         </p>
       ) : null}
 
-      <div>
-        <label className="text-sm font-semibold text-gea-midnight" htmlFor="identifier">
-          Usuario / DNI / CE / Correo
-        </label>
-        <input
-          id="identifier"
-          type="text"
-          autoComplete="username"
-          placeholder="usuario@gea.local"
-          {...register('identifier', {
-            required: 'Ingresa un usuario o correo válido',
-            minLength: { value: 3, message: 'Debe tener al menos 3 caracteres' },
-          })}
-          aria-invalid={errors.identifier ? 'true' : 'false'}
-          disabled={loading}
-          className="mt-2 w-full rounded-2xl border border-gea-slate/40 bg-gea-slate/10 px-4 py-3 text-base text-gea-midnight transition focus:border-gea-blue focus:bg-white focus:outline-none focus:ring-4 focus:ring-gea-blue/20 disabled:cursor-not-allowed"
-        />
-        {errors.identifier ? (
-          <p className="mt-1 text-xs font-medium text-gea-red" role="alert">
-            {errors.identifier.message}
-          </p>
-        ) : null}
-      </div>
+      <div className="space-y-5">
+        <div>
+          <label className="text-sm font-semibold text-gea-midnight" htmlFor="identifier">
+            Usuario / DNI / CE / Correo
+          </label>
+          <input
+            id="identifier"
+            type="text"
+            autoComplete="username"
+            placeholder="usuario@gea.local"
+            {...register('identifier', {
+              required: 'Ingresa un usuario o correo válido',
+              minLength: { value: 3, message: 'Debe tener al menos 3 caracteres' },
+            })}
+            aria-invalid={errors.identifier ? 'true' : 'false'}
+            disabled={loading}
+            className="mt-2 w-full rounded-2xl border border-gea-slate/40 bg-gea-slate/10 px-4 py-3 text-base text-gea-midnight transition focus:border-gea-blue focus:bg-white focus:outline-none focus:ring-4 focus:ring-gea-blue/20 disabled:cursor-not-allowed"
+          />
+          {errors.identifier ? (
+            <p className="mt-1 text-xs font-medium text-gea-red" role="alert">
+              {errors.identifier.message}
+            </p>
+          ) : null}
+        </div>
 
-      <div>
-        <label className="text-sm font-semibold text-gea-midnight" htmlFor="password">
-          Contraseña
-        </label>
-        <input
-          id="password"
-          type="password"
-          autoComplete="current-password"
-          placeholder="••••••••"
-          {...register('password', { required: 'Ingresa tu contraseña' })}
-          aria-invalid={errors.password ? 'true' : 'false'}
-          disabled={loading}
-          className="mt-2 w-full rounded-2xl border border-gea-slate/40 bg-gea-slate/10 px-4 py-3 text-base text-gea-midnight transition focus:border-gea-blue focus:bg-white focus:outline-none focus:ring-4 focus:ring-gea-blue/20 disabled:cursor-not-allowed"
-        />
-        {errors.password ? (
-          <p className="mt-1 text-xs font-medium text-gea-red" role="alert">
-            {errors.password.message}
-          </p>
-        ) : null}
+        <div>
+          <label className="text-sm font-semibold text-gea-midnight" htmlFor="password">
+            Contraseña
+          </label>
+          <input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            placeholder="••••••••"
+            {...register('password', { required: 'Ingresa tu contraseña' })}
+            aria-invalid={errors.password ? 'true' : 'false'}
+            disabled={loading}
+            className="mt-2 w-full rounded-2xl border border-gea-slate/40 bg-gea-slate/10 px-4 py-3 text-base text-gea-midnight transition focus:border-gea-blue focus:bg-white focus:outline-none focus:ring-4 focus:ring-gea-blue/20 disabled:cursor-not-allowed"
+          />
+          {errors.password ? (
+            <p className="mt-1 text-xs font-medium text-gea-red" role="alert">
+              {errors.password.message}
+            </p>
+          ) : null}
+        </div>
       </div>
 
       <button
@@ -106,7 +106,7 @@ export function LoginForm({ onSubmit, loading = false, errorMessage, infoMessage
         </p>
       ) : (
         <p className="text-xs text-gea-slate">
-          Las sesiones siguen la política de un único dispositivo. Si necesitas asistencia, contacta a soporte GEA.
+          Este acceso sigue la política de sesión única. Si necesitas asistencia, contacta a soporte GEA.
         </p>
       )}
     </form>
