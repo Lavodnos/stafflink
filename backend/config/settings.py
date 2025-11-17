@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import List
+from typing import Any, List
 
 from dotenv import load_dotenv
 
@@ -52,55 +52,58 @@ ALLOWED_HOSTS = _env_list(os.environ.get("ALLOWED_HOSTS"))
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    "rest_framework",      # DRF
-    "corsheaders",         # CORS
-    "api",                 # tu app recién creada
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "rest_framework",  # DRF
+    "corsheaders",  # CORS
+    "drf_spectacular",  # OpenAPI/Swagger
+    "api",  # app raíz existente
+    "api.v1.recruitment",  # dominio de reclutamiento (ONE-PASS)
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",  # debe ir antes de CommonMiddleware
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'config.urls'
+ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'config.wsgi.application'
+WSGI_APPLICATION = "config.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("POSTGRES_DB", "stafflink"),
+        "USER": os.environ.get("POSTGRES_USER", "postgres"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", ""),
+        "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
+        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
     }
 }
 
@@ -110,16 +113,16 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -127,9 +130,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -139,18 +142,27 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
 
 # REST Framework base configuration
-REST_FRAMEWORK = {
+REST_FRAMEWORK: dict[str, Any] = {
     "DEFAULT_AUTHENTICATION_CLASSES": [],
     "DEFAULT_PERMISSION_CLASSES": [],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "UNAUTHENTICATED_USER": None,
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Stafflink API",
+    "DESCRIPTION": "API v1 para el flujo de reclutamiento ONE-PASS",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # CORS settings
 _cors_from_env = _env_list(os.environ.get("CORS_ALLOWED_ORIGINS"))
@@ -165,7 +177,9 @@ else:
 CORS_ALLOW_CREDENTIALS = True
 
 # IAM integration
-IAM_BASE_URL = os.environ.get("IAM_BASE_URL", "http://localhost:58000/api/v1").rstrip("/")
+IAM_BASE_URL = os.environ.get("IAM_BASE_URL", "http://localhost:58000/api/v1").rstrip(
+    "/"
+)
 IAM_APP_ID = os.environ.get(
     "IAM_APP_ID",
     "00000000-0000-0000-0000-000000000000",
@@ -187,3 +201,25 @@ STAFFLINK_ACCESS_TOKEN_COOKIE_SAMESITE = os.environ.get(
     "Lax",
 )
 STAFFLINK_ACCESS_TOKEN_COOKIE_PATH = "/"
+
+# Upload / storage configuration
+STAFFLINK_STORAGE_BACKEND = os.environ.get("STAFFLINK_STORAGE_BACKEND", "local").lower()
+STAFFLINK_STORAGE_BASE_PATH = os.environ.get(
+    "STAFFLINK_STORAGE_BASE_PATH",
+    str(BASE_DIR / "var" / "uploads"),
+)
+STAFFLINK_UPLOAD_MAX_SIZE_BYTES = int(
+    os.environ.get("STAFFLINK_UPLOAD_MAX_SIZE_BYTES", str(5 * 1024 * 1024))
+)
+STAFFLINK_ALLOWED_UPLOAD_EXTENSIONS = _env_list(
+    os.environ.get("STAFFLINK_ALLOWED_UPLOAD_EXTENSIONS")
+) or [
+    "jpg",
+    "jpeg",
+    "png",
+    "pdf",
+]
+
+STAFFLINK_EXPORT_OUTPUT_DIR = os.environ.get(
+    "STAFFLINK_EXPORT_OUTPUT_DIR", str(BASE_DIR / "var" / "exports")
+)

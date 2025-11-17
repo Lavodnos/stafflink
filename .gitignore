@@ -1,0 +1,12 @@
+# Entornos virtuales
+backend/venv/
+venv/
+.venv/
+
+# Archivos de Python compilados
+__pycache__/
+*.py[cod]
+
+ 
+ 
+ 

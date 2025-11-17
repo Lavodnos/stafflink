@@ -1,0 +1,6 @@
+# Architecture Decisions
+- Adopt a modular BFF in Django/DRF: `config/` holds project settings; `api/auth` handles IAM proxy; new `api/recruitment` app will cover RQ views (links, public form, verification, exports) split into views → serializers → services → validators, with adapters (storage, Smart) isolated under `integrations/`.
+- Feature-Sliced frontend: `src/modules/auth` (existing) plus `src/modules/recruitment` broken into subfeatures (link, applicant, verification, export), each with its own `api.ts`, hooks, and pages under `src/pages/recruitment`. Reusable UI primitives live in `src/components/ui`, theme tokens in `src/styles/tailwind.css`.
+- Cross-cutting concerns: audit logging via signals/middleware (`api/shared/`), role guards in frontend routes, and tests organized per module (`tests/test_auth`, `tests/test_recruitment`). This layout aligns with the ONE-PASS requirements and keeps IAM/Smart integrations decoupled.
+- Code-first migrations: all domain changes happen through Django models/migrations committed to git. Environments should run `python manage.py makemigrations` / `migrate` as part of deployment.
+- Authorization: endpoints enforce BO vs recruiter vs public access via DRF permission classes and IAM-issued roles/scopes; frontend mirrors this with route guards (`RequireRole`).

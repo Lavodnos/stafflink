@@ -1,3 +1,1 @@
-from django.db import models
-
-# Create your models here.
+"""Django app placeholder – actual models live under api.v1.*."""

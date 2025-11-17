@@ -32,11 +32,12 @@ class IAMClient:
         password: str,
         captcha_token: str | None = None,
         force: bool = False,
+        app_id: str | None = None,
     ) -> dict[str, Any]:
         payload: dict[str, Any] = {
             "username_or_email": username_or_email,
             "password": password,
-            "app_id": self.app_id,
+            "app_id": app_id or self.app_id,
             "force": force,
         }
         if captcha_token:
@@ -82,7 +83,13 @@ class IAMClient:
             with httpx.Client(timeout=self.timeout) as client:
                 response = client.request(method, url, **request_kwargs)
         except httpx.RequestError as exc:
-            raise IAMUnavailableError(detail={"detail": "IAM request failed", "error": str(exc)}) from exc
+            raise IAMUnavailableError(
+                detail={
+                    "error": "IAM_UNAVAILABLE",
+                    "message": "No podemos conectarnos con el servicio de identidad. Intenta nuevamente en unos minutos.",
+                    "reason": str(exc),
+                }
+            ) from exc
 
         data: dict[str, Any] | None
         try:
@@ -91,7 +98,14 @@ class IAMClient:
             data = None
 
         if response.status_code >= 400:
-            raise IAMServiceError(status_code=response.status_code, detail=data or {"detail": "IAM error"})
+            raise IAMServiceError(
+                status_code=response.status_code,
+                detail=data
+                or {
+                    "error": "IAM_SERVICE_ERROR",
+                    "message": "El servicio de identidad respondió con un error inesperado.",
+                },
+            )
 
         return data or {}
 

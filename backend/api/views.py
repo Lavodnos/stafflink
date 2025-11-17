@@ -1,3 +1,1 @@
-from django.shortcuts import render
-
-# Create your views here.
+"""Root app does not expose views; use api.v1.*."""

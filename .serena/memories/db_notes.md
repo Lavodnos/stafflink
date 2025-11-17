@@ -1,0 +1,5 @@
+# Database Notes
+- Stafflink now targets PostgreSQL 17 (localhost:2424, user `postgres`). Environment variables `POSTGRES_*` live in `backend/.env` and `.env.example`. Install `psycopg[binary]==3.2.12` and run `manage.py migrate` to auto-create the schema.
+- We removed Django's built-in auth/admin apps to avoid unused `auth_*` tables because IAM is the sole identity provider. Only `django_content_type`, `django_migrations`, `django_session`, and the `recruitment_*` tables remain. DRF is configured with `UNAUTHENTICATED_USER = None` to avoid auth dependencies.
+- Recruitment models now include explicit DB indexes (FKs, and `Applicant` has a composite index on `status` + `submitted_at`) plus sane defaults for `blank=True` fields to avoid NULL/consistency issues. Migration `0002_alter_applicant_alternate_phone_and_more` captures these tweaks.
+- If the DB needs a reset, drop the `stafflink` database (via pgAdmin or `psql`), recreate it, and run `manage.py migrate` – this rebuilds the minimal required tables.

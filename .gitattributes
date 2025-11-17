@@ -1,0 +1,15 @@
+# Normalización general
+* text=auto
+
+# Fuerza LF para ciertos tipos (scripts, código fuente)
+*.py   text eol=lf
+*.js   text eol=lf
+*.sh   text eol=lf
+
+# Archivos que deben conservar CRLF (si tienes .bat u otros)
+*.bat  text eol=crlf
+
+# Binarios: no tocar
+*.png  binary
+*.jpg  binary
+*.exe  binary

@@ -1,0 +1,1 @@
+Created docs/BACKEND_MODELS_GUIDE.md documenting every model in backend/api/v1/recruitment (Campaign, RecruitmentLink, Applicant, ApplicantDocument, Verification, SmartExportBatch, SmartExportBatchItem, AuditLog), their enums/indexes/constraints, relations, interactions with serializers/services/validators, and a checklist for extending the schema.
