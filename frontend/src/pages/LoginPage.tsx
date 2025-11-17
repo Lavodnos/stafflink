@@ -50,12 +50,15 @@ export function LoginPage() {
       navigate('/');
     } catch (error) {
       if (error instanceof ApiError) {
-        const payload = error.payload as { detail?: { error?: string } } | undefined;
-        if (!forceNextAttempt && payload?.detail?.error === 'SESSION_ALREADY_ACTIVE') {
-          setFormError('Ya existe una sesión activa en otro navegador. Presiona nuevamente “Ingresar” para cerrarla y continuar aquí.');
+        const payload = (error.payload ?? {}) as { error?: string; message?: string } | undefined;
+        if (!forceNextAttempt && payload?.error === 'SESSION_ALREADY_ACTIVE') {
+          setFormError(
+            payload.message ??
+              'Ya existe una sesión activa en otro navegador. Presiona nuevamente “Ingresar” para cerrarla y continuar aquí.',
+          );
           setForceNextAttempt(true);
         } else {
-          setFormError(error.message);
+          setFormError(payload?.message ?? error.message);
           setForceNextAttempt(false);
         }
       } else {

@@ -52,13 +52,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       if (error instanceof ApiError && isSessionActiveError(error) && !forceLogin) {
         const friendlyMessage =
+          extractPayloadMessage(error) ||
           'Ya existe una sesión activa en otro navegador. Presiona nuevamente “Ingresar” para cerrarla y continuar aquí.';
         setLastError(friendlyMessage);
-        return Promise.reject(
-            new ApiError(friendlyMessage, error.status, {
-            detail: { error: 'SESSION_ALREADY_ACTIVE' },
-          }),
-        );
+        return Promise.reject(error);
       }
       handleAuthError(error, setLastError);
       setIsAuthenticated(false);
@@ -99,36 +96,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 function handleAuthError(error: unknown, setLastError: (message: string) => void) {
   if (error instanceof ApiError) {
-    if (typeof error.payload === 'object' && error.payload !== null) {
-      const detail = (error.payload as Record<string, unknown>).detail;
-      if (typeof detail === 'string') {
-        setLastError(detail);
-        return;
-      }
-      if (detail && typeof detail === 'object') {
-        if ('message' in detail) {
-          setLastError(String(detail.message));
-          return;
-        }
-        if ('error' in detail) {
-          setLastError(String((detail as Record<string, unknown>).error));
-          return;
-        }
-      }
-    }
-    setLastError(error.message);
-  } else {
-    setLastError('Error inesperado al iniciar sesión.');
+    const message = extractPayloadMessage(error) ?? error.message;
+    setLastError(message);
+    return;
   }
+  setLastError('Error inesperado al iniciar sesión.');
+}
+
+function extractPayloadMessage(error: ApiError): string | undefined {
+  if (typeof error.payload === 'object' && error.payload !== null) {
+    const payload = error.payload as Record<string, unknown>;
+    if (typeof payload.message === 'string') {
+      return payload.message;
+    }
+    if (
+      payload.detail &&
+      typeof payload.detail === 'object' &&
+      typeof (payload.detail as Record<string, unknown>).message === 'string'
+    ) {
+      return String((payload.detail as Record<string, unknown>).message);
+    }
+  }
+  return undefined;
 }
 
 function isSessionActiveError(error: ApiError): boolean {
   if (typeof error.payload !== 'object' || error.payload === null) {
     return false;
   }
-  const detail = (error.payload as Record<string, unknown>).detail;
-  if (detail && typeof detail === 'object' && 'error' in detail) {
-    return String(detail.error) === 'SESSION_ALREADY_ACTIVE';
+  const payload = error.payload as Record<string, unknown>;
+  if (payload.error && typeof payload.error === 'string') {
+    return payload.error === 'SESSION_ALREADY_ACTIVE';
+  }
+  if (
+    payload.detail &&
+    typeof payload.detail === 'object' &&
+    'error' in payload.detail &&
+    typeof (payload.detail as Record<string, unknown>).error === 'string'
+  ) {
+    return (payload.detail as Record<string, unknown>).error === 'SESSION_ALREADY_ACTIVE';
   }
   return false;
 }

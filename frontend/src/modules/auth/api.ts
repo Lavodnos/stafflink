@@ -1,4 +1,5 @@
 import { apiFetch } from '../../lib/http';
+import { IAM_APP_ID } from '../../config';
 import type { LoginPayload, LoginResponse, SessionResponse } from './types';
 
 function serialisePayload(payload: LoginPayload) {
@@ -13,6 +14,11 @@ function serialisePayload(payload: LoginPayload) {
 
   if (typeof payload.force === 'boolean') {
     body.force = payload.force;
+  }
+
+  const appId = payload.appId ?? IAM_APP_ID;
+  if (appId) {
+    body.app_id = appId;
   }
 
   return body;

@@ -26,12 +26,30 @@ export async function apiFetch<TResponse = MaybeJson>(
   const payload = canParseJson && !skipJson ? await response.json().catch(() => null) : null;
 
   if (!response.ok) {
-    const message =
-      (payload && typeof payload === 'object' && 'detail' in payload
-        ? JSON.stringify(payload.detail)
-        : response.statusText) || 'Request failed';
+    const message = resolveErrorMessage(payload, response.statusText);
     throw new ApiError(message, response.status, payload ?? undefined);
   }
 
   return (payload as TResponse) ?? ({} as TResponse);
+}
+
+function resolveErrorMessage(payload: unknown, fallback: string): string {
+  if (payload && typeof payload === 'object') {
+    const payloadRecord = payload as Record<string, unknown>;
+    if (typeof payloadRecord.message === 'string') {
+      return payloadRecord.message;
+    }
+    if (typeof payloadRecord.detail === 'string') {
+      return payloadRecord.detail;
+    }
+    if (
+      payloadRecord.detail &&
+      typeof payloadRecord.detail === 'object' &&
+      'message' in payloadRecord.detail &&
+      typeof (payloadRecord.detail as Record<string, unknown>).message === 'string'
+    ) {
+      return String((payloadRecord.detail as Record<string, unknown>).message);
+    }
+  }
+  return fallback || 'Request failed';
 }
