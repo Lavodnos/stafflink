@@ -42,6 +42,7 @@
 - Frontend añade `AuthProvider`, `useAuth` y `LoginForm`; router protege `/` y muestra `LoginPage`.
 - `npm run lint` y `npm run build` verificados, `vite.config.ts` proxea `/api` → `http://localhost:8000`.
 - Para desarrollo: `cd backend && source venv/bin/activate && python manage.py runserver`, `cd frontend && npm run dev`.
+- Para validar login sin Postgres (solo IAM), definir `DJANGO_SETTINGS_MODULE=config.settings_test` antes de `runserver`; este settings usa SQLite (`test.sqlite3`) y permite probar `/api/auth/login|logout|session` sin levantar la base principal. El frontend ya consume los mensajes `{error, message, session}` devueltos por el backend al proxyar IAM.
 
 ## Guía para Próxima Sesión
 1. **Leer `CEREBRO.md` en `/home/lavodnos/code/SERVICES IAM GEA/`**: contiene el resumen maestro (repos, puertos Docker, tareas pendientes).
@@ -61,3 +62,37 @@
    - Diseñar DTOs y almacenamiento local para las entidades S1 (campañas, reclutadores, postulantes) basados en alcance de `01-SCOPE.md`.
 
 Mantén este archivo y `CEREBRO.md` sincronizados en cada push/pull para que cualquier agente pueda retomar sin perder contexto.
+
+## Plan de Implementación Stafflink (BFF modular)
+
+Recordatorio de arquitectura: mantenemos un Backend-for-Frontend en Django/DRF (`api/v1/recruitment` dividido en views → serializers → services → validators) y un frontend React feature-sliced. El login vía IAM ya está resuelto; el plan comienza sobre esa base.
+
+1. **Modelo de datos y migraciones**
+   - Crear migraciones para `campaign`, `blacklist`, `link`, `candidate`, `candidate_documents`, `candidate_process`, `candidate_assignment` (y campos auxiliares como `asistencia_extra` y `regimen_pago`).
+   - Configurar señales/servicios para que, al crear un candidato, se copien los defaults del link (modalidad, condición, horario, descanso) sin duplicar lógica en el formulario.
+   - Sembrar catálogos mínimos (estados, modalidades) vía fixtures si es necesario.
+
+2. **APIs base bajo `api/v1/recruitment`**
+   - Exponer viewsets para campañas y blacklist (solo roles BO/Admin).
+   - Crear endpoints para links (listado, creación, edición, filtros por campaña/estado) respetando la modularidad del BFF.
+   - Implementar el endpoint público de creación de candidatos (`POST /api/v1/recruitment/candidates/`) con validaciones de duplicidad y bloqueo por blacklist.
+
+3. **Procesos BO (checklist, hitos, contrato)**
+   - Añadir endpoints internos para actualizar `candidate_documents`, `candidate_process` y `candidate_assignment`, usando acciones específicas (ej. `PATCH /candidates/{id}/process/decision/` para Apto/Observado/Rechazado).
+   - Incorporar soporte para cortes puntuales de asistencia mediante el campo `asistencia_extra` (JSON) y exponerlo en las respuestas.
+   - Garantizar permisos por rol: BO actualiza documentos/procesos; RRHH actualiza contrato.
+
+4. **Frontend feature-sliced**
+   - Módulos `src/modules/recruitment/campaigns`, `.../links`, `.../candidates` para CRUD y tableros, aprovechando el hook `useAuth` existente para roles.
+   - Formulario público reutiliza `link` para precargar defaults y enviar datos al endpoint nuevo.
+   - Vista de detalle BO con tabs (Datos, Documentos, Proceso, Contrato), cada uno pegando a su endpoint.
+
+5. **Exportaciones Smart y reportes**
+   - Implementar un servicio (en `api/v1/recruitment/services/exports.py`) que arme Excel según el layout Smart usando los modelos anteriores.
+   - Endpoint protegido para descargar exportes y registrar bitácora (usuario, filtros, timestamp) para auditoría.
+
+6. **QA y despliegue**
+   - Tests unitarios para modelos/serializers (duplicidad, copias de defaults, flujos Apto/Observado/Cese).
+   - Tests de integración para el formulario público y para las acciones BO (checklist + proceso).
+   - En frontend, lint + pruebas de componentes críticos (formulario y tabs BO). Mantener `npm run build` verde tras reinstalar deps si es necesario.
+   - Documentar en `docs/` cualquier endpoint nuevo y actualizar este plan conforme avancemos por fases.

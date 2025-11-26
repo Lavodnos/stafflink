@@ -9,88 +9,78 @@ from . import models
 
 @admin.register(models.Campaign)
 class CampaignAdmin(admin.ModelAdmin):
-    list_display = ("code", "name", "site_name", "is_active", "created_at")
-    list_filter = ("is_active",)
-    search_fields = ("code", "name", "site_name")
+    list_display = ("codigo", "nombre", "sede", "area", "estado", "created_at")
+    list_filter = ("estado", "sede")
+    search_fields = ("codigo", "nombre", "sede", "area")
 
 
-@admin.register(models.RecruitmentLink)
-class RecruitmentLinkAdmin(admin.ModelAdmin):
+@admin.register(models.Blacklist)
+class BlacklistAdmin(admin.ModelAdmin):
+    list_display = ("dni", "nombres", "estado", "updated_at")
+    list_filter = ("estado",)
+    search_fields = ("dni", "nombres")
+
+
+@admin.register(models.Link)
+class LinkAdmin(admin.ModelAdmin):
     list_display = (
-        "title",
+        "titulo",
         "slug",
         "campaign",
-        "owner_name",
-        "status",
+        "grupo",
+        "user_name",
+        "estado",
         "expires_at",
     )
-    list_filter = ("status", "modality", "employment_condition")
-    search_fields = ("title", "slug", "owner_name", "campaign__name", "campaign__code")
+    list_filter = ("estado", "modalidad", "condicion")
+    search_fields = (
+        "titulo",
+        "slug",
+        "grupo",
+        "campaign__codigo",
+        "campaign__nombre",
+        "user_name",
+    )
     autocomplete_fields = ("campaign",)
 
 
-class ApplicantDocumentInline(admin.TabularInline):
-    model = models.ApplicantDocument
+class CandidateDocumentsInline(admin.StackedInline):
+    model = models.CandidateDocuments
     extra = 0
-    readonly_fields = (
-        "kind",
-        "original_name",
-        "content_type",
-        "size_bytes",
-        "file_path",
-    )
 
 
-@admin.register(models.Applicant)
-class ApplicantAdmin(admin.ModelAdmin):
+class CandidateProcessInline(admin.StackedInline):
+    model = models.CandidateProcess
+    extra = 0
+
+
+class CandidateAssignmentInline(admin.StackedInline):
+    model = models.CandidateAssignment
+    extra = 0
+
+
+@admin.register(models.Candidate)
+class CandidateAdmin(admin.ModelAdmin):
     list_display = (
-        "last_name",
-        "first_name",
-        "document_type",
-        "document_number",
-        "status",
+        "numero_documento",
+        "nombres_completos",
         "link",
-        "submitted_at",
-    )
-    list_filter = ("status", "document_type", "link__campaign__name")
-    search_fields = (
-        "first_name",
-        "last_name",
-        "second_last_name",
-        "document_number",
         "email",
+        "telefono",
+        "created_at",
+    )
+    list_filter = ("link__campaign__nombre", "has_callcenter_experience")
+    search_fields = (
+        "numero_documento",
+        "nombres_completos",
+        "apellido_paterno",
+        "apellido_materno",
+        "email",
+        "telefono",
     )
     autocomplete_fields = ("link",)
-    inlines = [ApplicantDocumentInline]
-
-
-@admin.register(models.Verification)
-class VerificationAdmin(admin.ModelAdmin):
-    list_display = ("applicant", "status", "reviewed_by_name", "decided_at")
-    list_filter = ("status",)
-    search_fields = (
-        "applicant__first_name",
-        "applicant__last_name",
-        "reviewed_by_name",
-    )
-
-
-class SmartExportBatchItemInline(admin.TabularInline):
-    model = models.SmartExportBatchItem
-    extra = 0
-    autocomplete_fields = ("applicant",)
-
-
-@admin.register(models.SmartExportBatch)
-class SmartExportBatchAdmin(admin.ModelAdmin):
-    list_display = ("batch_code", "status", "generated_by_name", "generated_at")
-    list_filter = ("status",)
-    search_fields = ("batch_code", "generated_by_name")
-    inlines = [SmartExportBatchItemInline]
-
-
-@admin.register(models.AuditLog)
-class AuditLogAdmin(admin.ModelAdmin):
-    list_display = ("entity_type", "entity_id", "action", "actor_name", "created_at")
-    list_filter = ("entity_type",)
-    search_fields = ("entity_id", "actor_name", "action")
+    inlines = [
+        CandidateDocumentsInline,
+        CandidateProcessInline,
+        CandidateAssignmentInline,
+    ]

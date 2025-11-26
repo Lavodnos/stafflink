@@ -52,6 +52,7 @@ ALLOWED_HOSTS = _env_list(os.environ.get("ALLOWED_HOSTS"))
 # Application definition
 
 INSTALLED_APPS = [
+    "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
@@ -69,6 +70,7 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",  # debe ir antes de CommonMiddleware
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -146,7 +148,9 @@ STATIC_URL = "static/"
 
 # REST Framework base configuration
 REST_FRAMEWORK: dict[str, Any] = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "api.auth.authentication.IAMCookieAuthentication",
+    ],
     "DEFAULT_PERMISSION_CLASSES": [],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "UNAUTHENTICATED_USER": None,
@@ -184,8 +188,15 @@ IAM_APP_ID = os.environ.get(
     "IAM_APP_ID",
     "00000000-0000-0000-0000-000000000000",
 )
+IAM_CONTROL_APP_ID = os.environ.get(
+    "IAM_CONTROL_APP_ID",
+    "ed9ca85c-8247-4043-9fd2-d1c47497f461",
+)
 IAM_TIMEOUT_SECONDS = float(os.environ.get("IAM_TIMEOUT_SECONDS", "10"))
 IAM_CAPTCHA_REQUIRED = _env_bool(os.environ.get("IAM_CAPTCHA_REQUIRED"), default=False)
+IAM_SERVICE_TOKEN = os.environ.get("IAM_SERVICE_TOKEN")  # opcional, para consultar Directory
+IAM_SERVICE_USER = os.environ.get("IAM_SERVICE_USER")
+IAM_SERVICE_PASSWORD = os.environ.get("IAM_SERVICE_PASSWORD")
 
 # Token / cookie configuration
 STAFFLINK_ACCESS_TOKEN_COOKIE_NAME = os.environ.get(

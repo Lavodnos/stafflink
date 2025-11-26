@@ -38,6 +38,7 @@ export interface SessionResponse {
   active: boolean;
   user?: LoginResponse['user'];
   session?: SessionDetail | null;
+  permissions?: string[];
 }
 
 export interface AuthState {
@@ -45,8 +46,10 @@ export interface AuthState {
   isReady: boolean;
   isLoading: boolean;
   user: LoginResponse['user'];
+  permissions: string[];
   lastError?: string;
   login(payload: LoginPayload): Promise<LoginResponse>;
   logout(): Promise<void>;
   clearError(): void;
+  hasPermission(required: string | string[], mode?: 'all' | 'any'): boolean;
 }

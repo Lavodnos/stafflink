@@ -8,87 +8,55 @@ from ..serializers.campaign_serializer import CampaignSerializer
 from ..services import link_service
 
 
-class RecruitmentLinkSerializer(serializers.ModelSerializer):
+class LinkSerializer(serializers.ModelSerializer):
     campaign = serializers.PrimaryKeyRelatedField(
-        queryset=models.Campaign.objects.filter(is_active=True)
+        queryset=models.Campaign.objects.all()
     )
-    owner_name = serializers.CharField(read_only=True)
-    owner_id = serializers.UUIDField(read_only=True)
-    status = serializers.CharField(read_only=True)
 
     class Meta:
-        model = models.RecruitmentLink
+        model = models.Link
         fields = [
             "id",
             "campaign",
+            "grupo",
+            "user_id",
+            "user_name",
+            "periodo",
             "slug",
-            "title",
-            "owner_id",
-            "owner_name",
-            "status",
-            "modality",
-            "employment_condition",
-            "period_label",
-            "period_start",
-            "period_end",
-            "rest_day",
-            "work_week",
-            "quota",
+            "titulo",
+            "cuotas",
+            "semana_trabajo",
             "expires_at",
-            "expires_automatically",
-            "qr_reference",
             "notes",
+            "modalidad",
+            "condicion",
+            "estado",
+            "hora_gestion",
+            "descanso",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = (
-            "id",
-            "owner_id",
-            "owner_name",
-            "status",
-            "created_at",
-            "updated_at",
-        )
+        read_only_fields = ("id", "estado", "created_at", "updated_at")
 
     def create(self, validated_data):
         request = self.context["request"]
-        return link_service.create_link(data=validated_data, request=request)
-
-
-class RecruitmentLinkDetailSerializer(RecruitmentLinkSerializer):
-    campaign = CampaignSerializer(read_only=True)
-
-
-class RecruitmentLinkUpdateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.RecruitmentLink
-        fields = [
-            "title",
-            "modality",
-            "employment_condition",
-            "period_label",
-            "period_start",
-            "period_end",
-            "rest_day",
-            "work_week",
-            "quota",
-            "expires_at",
-            "expires_automatically",
-            "qr_reference",
-            "notes",
-        ]
+        actor_id = get_user_id(request)
+        actor_name = get_user_name(request)
+        return link_service.create_link(
+            data=validated_data, actor_id=actor_id, actor_name=actor_name
+        )
 
     def update(self, instance, validated_data):
-        request = self.context.get("request")
-        actor_id = get_user_id(request) if request else None
-        actor_name = get_user_name(request) if request else ""
+        request = self.context["request"]
+        actor_id = get_user_id(request)
         return link_service.update_link(
-            link=instance,
-            data=validated_data,
-            actor_id=actor_id,
-            actor_name=actor_name,
+            link=instance, data=validated_data, actor_id=actor_id
         )
 
 
+class LinkDetailSerializer(LinkSerializer):
+    campaign = CampaignSerializer(read_only=True)
+
+
 class LinkActionSerializer(serializers.Serializer):
-    reason = serializers.CharField(required=False, allow_blank=True)
+    motivo = serializers.CharField(required=False, allow_blank=True)

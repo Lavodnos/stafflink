@@ -1,4 +1,4 @@
-"""Serviços relacionados a campañas."""
+"""Servicios relacionados a campañas."""
 
 from __future__ import annotations
 
@@ -8,4 +8,4 @@ from .. import models
 
 
 def list_campaigns() -> QuerySet[models.Campaign]:
-    return models.Campaign.objects.filter(is_active=True).order_by("name")
+    return models.Campaign.objects.all().order_by("nombre")

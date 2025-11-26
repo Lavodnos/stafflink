@@ -57,7 +57,15 @@ class IAMClient:
     def introspect(self, token: str) -> dict[str, Any]:
         """Pregunta a IAM si el token proporcionado sigue activo."""
 
-        return self._post("auth/introspect", {"token": token})
+        return self._post(
+            "auth/introspect",
+            {
+                "token": token,
+                # Algunos despliegues de IAM requieren el app_id para devolver
+                # roles/permisos específicos de la aplicación.
+                "app_id": self.app_id,
+            },
+        )
 
     def _post(
         self,
@@ -66,6 +74,18 @@ class IAMClient:
         headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         return self._request("POST", path, json_data=payload, headers=headers)
+
+    def get_user_roles(self, user_id: str, token: str | None = None) -> dict[str, Any]:
+        """Obtiene roles/permisos del usuario desde IAM Directory.
+
+        Se usa como fallback cuando la introspección no trae permisos.
+        """
+
+        if not token:
+            raise ValueError("Token requerido para consultar Directory")
+
+        headers = {"Authorization": f"Bearer {token}"}
+        return self._request("GET", f"directory/users/{user_id}/roles", headers=headers)
 
     def _request(
         self,

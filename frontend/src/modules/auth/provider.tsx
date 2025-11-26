@@ -10,6 +10,7 @@ const initialUser: LoginResponse['user'] = null;
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState(initialUser);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [permissions, setPermissions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [lastError, setLastError] = useState<string | undefined>(undefined);
@@ -22,13 +23,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session.active) {
         setUser(session.user ?? null);
         setIsAuthenticated(true);
+        setPermissions(normalizePermissions(session.permissions));
       } else {
         setUser(null);
         setIsAuthenticated(false);
+        setPermissions([]);
       }
     } catch {
       setUser(null);
       setIsAuthenticated(false);
+      setPermissions([]);
     } finally {
       setIsReady(true);
     }
@@ -48,6 +52,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const finalResponse: LoginResponse = forceLogin ? { ...response, forced: true } : response;
       setUser(finalResponse.user ?? null);
       setIsAuthenticated(true);
+
+       // Después de login, consultamos la sesión para obtener permisos normalizados.
+       try {
+         const session = await authApi.fetchSession();
+         setPermissions(normalizePermissions(session.permissions));
+       } catch {
+         setPermissions([]);
+       }
       return finalResponse;
     } catch (error) {
       if (error instanceof ApiError && isSessionActiveError(error) && !forceLogin) {
@@ -59,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       handleAuthError(error, setLastError);
       setIsAuthenticated(false);
+      setPermissions([]);
       return Promise.reject(error);
     } finally {
       setIsLoading(false);
@@ -74,8 +87,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setUser(null);
       setIsAuthenticated(false);
+      setPermissions([]);
     }
   }, []);
+
+  const hasPermission = useCallback(
+    (required: string | string[], mode: 'all' | 'any' = 'all') => {
+      const requiredList = Array.isArray(required) ? required : [required];
+      const normalized = permissions.map((p) => p.toLowerCase());
+      return mode === 'any'
+        ? requiredList.some((perm) => normalized.includes(perm.toLowerCase()))
+        : requiredList.every((perm) => normalized.includes(perm.toLowerCase()));
+    },
+    [permissions],
+  );
 
   const value = useMemo<AuthState>(
     () => ({
@@ -83,12 +108,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isReady,
       isLoading,
       user,
+      permissions,
       lastError,
       login,
       logout,
       clearError,
+      hasPermission,
     }),
-    [isAuthenticated, isReady, isLoading, user, lastError, login, logout, clearError],
+    [isAuthenticated, isReady, isLoading, user, permissions, lastError, login, logout, clearError, hasPermission],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -137,4 +164,9 @@ function isSessionActiveError(error: ApiError): boolean {
     return (payload.detail as Record<string, unknown>).error === 'SESSION_ALREADY_ACTIVE';
   }
   return false;
+}
+
+function normalizePermissions(perms?: unknown): string[] {
+  if (!perms || !Array.isArray(perms)) return [];
+  return perms.map((p) => String(p).toLowerCase());
 }

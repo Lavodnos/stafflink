@@ -28,47 +28,69 @@ def _empty_dict() -> dict[str, Any]:
 
 
 class Campaign(TimeStampedModel):
-    """Campaña y sede asociada a un grupo/link."""
+    """Descripción base de la campaña."""
+
+    class Status(models.TextChoices):
+        ACTIVA = "activa", "Activa"
+        INACTIVA = "inactiva", "Inactiva"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    code = models.CharField(max_length=50, unique=True)
-    name = models.CharField(max_length=255)
-    site_name = models.CharField(max_length=255, blank=True, default="")
-    description = models.TextField(blank=True, default="")
-    is_active = models.BooleanField(default=True)
+    codigo = models.CharField(max_length=50, unique=True)
+    area = models.CharField(max_length=120, blank=True, default="")
+    nombre = models.CharField(max_length=255)
+    sede = models.CharField(max_length=255, blank=True, default="")
+    estado = models.CharField(
+        max_length=20, choices=Status.choices, default=Status.ACTIVA
+    )
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["nombre"]
+        db_table = "campaign"
 
     def __str__(self) -> str:  # pragma: no cover - para admin
-        return f"{self.code} - {self.name}"
+        return f"{self.codigo} - {self.nombre}"
 
 
-class RecruitmentLink(TimeStampedModel):
-    """Link/QR que reciben los postulantes para un grupo específico."""
+class Blacklist(TimeStampedModel):
+    """Personas vetadas para cualquier campaña."""
 
-    class LinkStatus(models.TextChoices):
-        ACTIVE = "active", "Activa"
-        EXPIRED = "expired", "Vencida"
-        REVOKED = "revoked", "Anulada"
+    class Status(models.TextChoices):
+        ACTIVO = "activo", "Activo"
+        INACTIVO = "inactivo", "Inactivo"
 
-    class Modality(models.TextChoices):
-        ONSITE = "onsite", "Presencial"
-        HYBRID = "hybrid", "Híbrido"
-        REMOTE = "remote", "Remoto"
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    dni = models.CharField(max_length=16, unique=True)
+    nombres = models.CharField(max_length=255)
+    descripcion = models.TextField(blank=True, default="")
+    estado = models.CharField(
+        max_length=20, choices=Status.choices, default=Status.ACTIVO
+    )
 
-    class EmploymentCondition(models.TextChoices):
-        PAYROLL = "payroll", "Planilla"
-        CONTRACTOR = "contractor", "Honorarios"
+    class Meta:
+        ordering = ["-updated_at"]
+        db_table = "blacklist"
 
-    class Weekday(models.TextChoices):
-        MONDAY = "monday", "Lunes"
-        TUESDAY = "tuesday", "Martes"
-        WEDNESDAY = "wednesday", "Miércoles"
-        THURSDAY = "thursday", "Jueves"
-        FRIDAY = "friday", "Viernes"
-        SATURDAY = "saturday", "Sábado"
-        SUNDAY = "sunday", "Domingo"
+    def __str__(self) -> str:  # pragma: no cover
+        return f"{self.dni} - {self.nombres}"
+
+
+class Link(TimeStampedModel):
+    """Link de reclutamiento por campaña/grupo."""
+
+    class Estado(models.TextChoices):
+        ACTIVO = "activo", "Activo"
+        EXPIRADO = "expirado", "Expirado"
+        REVOCADO = "revocado", "Revocado"
+
+    class Modalidad(models.TextChoices):
+        PRESENCIAL = "presencial", "Presencial"
+        REMOTO = "remoto", "Remoto"
+        HIBRIDO = "hibrido", "Híbrido"
+
+    class Condicion(models.TextChoices):
+        FULL_TIME = "full_time", "Full Time"
+        PART_TIME = "part_time", "Part Time"
+        FLEX = "flex", "Flexible"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     campaign = models.ForeignKey(
@@ -77,313 +99,232 @@ class RecruitmentLink(TimeStampedModel):
         related_name="links",
         db_index=True,
     )
-    slug = models.SlugField(
-        max_length=64, unique=True, help_text="Identificador público del link"
-    )
-    title = models.CharField(max_length=255)
-    owner_id = models.UUIDField(help_text="UUID del usuario IAM reclutador")
-    owner_name = models.CharField(max_length=255, blank=True, default="")
-    status = models.CharField(
-        max_length=20,
-        choices=LinkStatus.choices,
-        default=LinkStatus.ACTIVE,
-        db_index=True,
-    )
-    modality = models.CharField(
-        max_length=20,
-        choices=Modality.choices,
-        default=Modality.ONSITE,
-    )
-    employment_condition = models.CharField(
-        max_length=20,
-        choices=EmploymentCondition.choices,
-        default=EmploymentCondition.PAYROLL,
-    )
-    period_label = models.CharField(max_length=120, blank=True, default="")
-    period_start = models.DateField(null=True, blank=True)
-    period_end = models.DateField(null=True, blank=True)
-    rest_day = models.CharField(
-        max_length=12,
-        choices=Weekday.choices,
-        blank=True,
-        default="",
-    )
-    work_week = models.PositiveSmallIntegerField(
+    grupo = models.CharField(max_length=50, blank=True, default="")
+    user_id = models.UUIDField(null=True, blank=True)
+    user_name = models.CharField(max_length=255, blank=True, default="")
+    periodo = models.CharField(max_length=32, blank=True, default="")
+    slug = models.SlugField(max_length=64, unique=True)
+    titulo = models.CharField(max_length=255)
+    cuotas = models.PositiveIntegerField(null=True, blank=True)
+    semana_trabajo = models.PositiveSmallIntegerField(
         null=True,
         blank=True,
         validators=[MinValueValidator(1), MaxValueValidator(53)],
     )
-    quota = models.PositiveIntegerField(null=True, blank=True)
-    expires_at = models.DateTimeField(
-        help_text="Fecha/hora límite del link (America/Lima)"
-    )
-    expires_automatically = models.BooleanField(default=True)
-    qr_reference = models.CharField(
-        max_length=255,
-        blank=True,
-        default="",
-        help_text="Referencia al código QR almacenado en el frontend/perimeter",
-    )
+    expires_at = models.DateTimeField(help_text="Fecha/hora límite del link")
     notes = models.TextField(blank=True, default="")
+    modalidad = models.CharField(
+        max_length=20,
+        choices=Modalidad.choices,
+        default=Modalidad.PRESENCIAL,
+    )
+    condicion = models.CharField(
+        max_length=20,
+        choices=Condicion.choices,
+        default=Condicion.FULL_TIME,
+    )
+    estado = models.CharField(
+        max_length=20, choices=Estado.choices, default=Estado.ACTIVO, db_index=True
+    )
+    hora_gestion = models.CharField(max_length=64, blank=True, default="")
+    descanso = models.CharField(max_length=64, blank=True, default="")
+    created_by = models.UUIDField(null=True, blank=True)
+    updated_by = models.UUIDField(null=True, blank=True)
 
     class Meta:
         ordering = ["-created_at"]
-        indexes = [
-            models.Index(fields=["status", "expires_at"]),
-        ]
+        db_table = "link"
 
     def __str__(self) -> str:  # pragma: no cover
-        return f"{self.title} ({self.slug})"
+        return f"{self.titulo} ({self.slug})"
 
 
-class Applicant(TimeStampedModel):
-    """Postulante que llena el formulario ONE-PASS."""
+class Candidate(TimeStampedModel):
+    """Ficha declarativa del postulante."""
 
     class DocumentType(models.TextChoices):
         DNI = "dni", "DNI"
-        CE = "ce", "Carné de extranjería"
-
-    class Status(models.TextChoices):
-        DRAFT = "draft", "Borrador"
-        SUBMITTED = "submitted", "Enviado"
-        UNDER_REVIEW = "under_review", "En revisión"
-        VERIFIED_OK = "verified_ok", "Verificado"
-        OBSERVED = "observed", "Observado"
-        REJECTED = "rejected", "Rechazado"
-        EXPORTED = "exported", "Exportado"
+        CE = "ce", "Carné extranjería"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     link = models.ForeignKey(
-        RecruitmentLink,
-        on_delete=models.CASCADE,
-        related_name="applicants",
+        Link,
+        on_delete=models.PROTECT,
+        related_name="candidates",
         db_index=True,
     )
-    first_name = models.CharField(max_length=150)
-    last_name = models.CharField(max_length=150)
-    second_last_name = models.CharField(max_length=150, blank=True, default="")
-    document_type = models.CharField(max_length=10, choices=DocumentType.choices)
-    document_number = models.CharField(
+    tipo_documento = models.CharField(max_length=10, choices=DocumentType.choices)
+    numero_documento = models.CharField(
         max_length=16,
         validators=[RegexValidator(r"^[0-9A-Za-z]{4,16}$", "Formato inválido")],
     )
-    birth_date = models.DateField(null=True, blank=True)
+    apellido_paterno = models.CharField(max_length=150)
+    apellido_materno = models.CharField(max_length=150, blank=True, default="")
+    nombres_completos = models.CharField(max_length=255)
+    telefono = models.CharField(max_length=32)
+    telefono_referencia = models.CharField(max_length=32, blank=True, default="")
     email = models.EmailField()
-    phone = models.CharField(max_length=32)
-    alternate_phone = models.CharField(max_length=32, blank=True, default="")
-    status = models.CharField(
-        max_length=20,
-        choices=Status.choices,
-        default=Status.DRAFT,
-        db_index=True,
-    )
-    submitted_at = models.DateTimeField(null=True, blank=True)
-    last_reviewed_at = models.DateTimeField(null=True, blank=True)
-    lpdp_consent = models.BooleanField(default=False)
-    lpdp_accepted_at = models.DateTimeField(null=True, blank=True)
-    origin_ip = models.GenericIPAddressField(null=True, blank=True)
-    user_agent = models.CharField(max_length=512, blank=True, default="")
-    metadata = models.JSONField(default=_empty_dict, blank=True)
+    sexo = models.CharField(max_length=50, blank=True, default="")
+    fecha_nacimiento = models.DateField(null=True, blank=True)
+    edad = models.PositiveSmallIntegerField(null=True, blank=True)
+    estado_civil = models.CharField(max_length=64, blank=True, default="")
+    numero_hijos = models.PositiveSmallIntegerField(null=True, blank=True)
+    nivel_academico = models.CharField(max_length=120, blank=True, default="")
+    carrera = models.CharField(max_length=120, blank=True, default="")
+    nacionalidad = models.CharField(max_length=120, blank=True, default="")
+    lugar_residencia = models.CharField(max_length=255, blank=True, default="")
+    distrito = models.CharField(max_length=120, blank=True, default="")
+    direccion = models.CharField(max_length=255, blank=True, default="")
+    has_callcenter_experience = models.BooleanField(default=False)
+    callcenter_experience_type = models.CharField(max_length=255, blank=True, default="")
+    callcenter_experience_time = models.CharField(max_length=100, blank=True, default="")
+    other_experience_type = models.CharField(max_length=255, blank=True, default="")
+    other_experience_time = models.CharField(max_length=100, blank=True, default="")
+    enteraste_oferta = models.CharField(max_length=255, blank=True, default="")
+    observacion = models.TextField(blank=True, default="")
+    modalidad = models.CharField(max_length=20, blank=True, default="")
+    condicion = models.CharField(max_length=20, blank=True, default="")
+    hora_gestion = models.CharField(max_length=64, blank=True, default="")
+    descanso = models.CharField(max_length=64, blank=True, default="")
+    created_by = models.UUIDField(null=True, blank=True)
+    updated_by = models.UUIDField(null=True, blank=True)
 
     class Meta:
         ordering = ["-created_at"]
-        indexes = [
-            models.Index(fields=["status", "-submitted_at"]),
-        ]
         constraints = [
             models.UniqueConstraint(
-                fields=["document_type", "document_number", "link"],
+                fields=["link", "tipo_documento", "numero_documento"],
                 name="unique_document_per_link",
             )
         ]
-
-    def save(self, *args: Any, **kwargs: Any) -> None:
-        self.first_name = (self.first_name or "").upper()
-        self.last_name = (self.last_name or "").upper()
-        self.second_last_name = (self.second_last_name or "").upper()
-        self.document_number = (self.document_number or "").upper()
-        super().save(*args, **kwargs)
+        db_table = "candidate"
 
     def __str__(self) -> str:  # pragma: no cover
-        return f"{self.last_name} {self.first_name}"
+        return f"{self.numero_documento} - {self.nombres_completos}"
 
 
-class ApplicantDocument(TimeStampedModel):
-    """Documento adjunto (DNI/CE u otros)."""
+class CandidateDocuments(TimeStampedModel):
+    """Checklist documental asociado a un postulante."""
 
-    class DocumentKind(models.TextChoices):
-        DNI_FRONT = "dni_front", "DNI anverso"
-        DNI_BACK = "dni_back", "DNI reverso"
-        CE_FRONT = "ce_front", "CE anverso"
-        CE_BACK = "ce_back", "CE reverso"
-        OTHER = "other", "Otro"
+    class Status(models.TextChoices):
+        PENDIENTE = "pendiente", "Pendiente"
+        COMPLETO = "completo", "Completo"
+        OBSERVADO = "observado", "Observado"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    applicant = models.ForeignKey(
-        Applicant,
+    candidate = models.OneToOneField(
+        Candidate,
         on_delete=models.CASCADE,
         related_name="documents",
-        db_index=True,
     )
-    kind = models.CharField(max_length=20, choices=DocumentKind.choices)
-    file_path = models.CharField(max_length=512)
-    original_name = models.CharField(max_length=255)
-    content_type = models.CharField(max_length=120)
-    size_bytes = models.PositiveIntegerField()
-    checksum = models.CharField(max_length=64, blank=True, default="")
-    uploaded_by = models.UUIDField(null=True, blank=True)
-
-    class Meta:
-        ordering = ["created_at"]
-
-    def __str__(self) -> str:  # pragma: no cover
-        return f"{self.kind} ({self.original_name})"
-
-
-class Verification(TimeStampedModel):
-    """Resultado del análisis BO para un postulante."""
-
-    class Status(models.TextChoices):
-        PENDING = "pending", "Pendiente"
-        APPROVED = "approved", "Apto"
-        OBSERVED = "observed", "Observado"
-        REJECTED = "rejected", "Rechazado"
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    applicant = models.OneToOneField(
-        Applicant,
-        on_delete=models.CASCADE,
-        related_name="verification",
-    )
+    cv_entregado = models.BooleanField(default=False)
+    dni_entregado = models.BooleanField(default=False)
+    certificado_entregado = models.BooleanField(default=False)
+    recibo_servicio_entregado = models.BooleanField(default=False)
+    ficha_datos_entregado = models.BooleanField(default=False)
+    autorizacion_datos_entregado = models.BooleanField(default=False)
     status = models.CharField(
-        max_length=20,
-        choices=Status.choices,
-        default=Status.PENDING,
+        max_length=20, choices=Status.choices, default=Status.PENDIENTE
     )
-    reviewed_by = models.UUIDField(null=True, blank=True)
-    reviewed_by_name = models.CharField(max_length=255, blank=True, default="")
-    decided_at = models.DateTimeField(null=True, blank=True)
-    decision_reason = models.TextField(blank=True, default="")
-    requested_correction_by = models.UUIDField(null=True, blank=True)
-    requested_correction_at = models.DateTimeField(null=True, blank=True)
-    risk_flags = models.JSONField(
-        default=_empty_dict,
-        blank=True,
-        help_text="Resultados de deduplicación/blacklist",
-    )
-    notes = models.TextField(blank=True, default="")
-
-    class Meta:
-        ordering = ["-updated_at"]
+    observacion = models.TextField(blank=True, default="")
 
     def __str__(self) -> str:  # pragma: no cover
-        return f"Verification {self.status} for {self.applicant_id}"
-
-
-class SmartExportBatch(TimeStampedModel):
-    """Lote exportado a Smart Boleta."""
-
-    class Status(models.TextChoices):
-        PENDING = "pending", "Pendiente"
-        GENERATED = "generated", "Generado"
-        DELIVERED = "delivered", "Entregado"
-        FAILED = "failed", "Fallido"
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    batch_code = models.CharField(max_length=64, unique=True)
-    status = models.CharField(
-        max_length=20, choices=Status.choices, default=Status.PENDING
-    )
-    generated_by = models.UUIDField(null=True, blank=True)
-    generated_by_name = models.CharField(max_length=255, blank=True)
-    generated_at = models.DateTimeField(default=timezone.now)
-    file_path = models.CharField(max_length=512, blank=True)
-    file_checksum = models.CharField(max_length=64, blank=True)
-    notes = models.TextField(blank=True)
-    applicants = models.ManyToManyField(
-        Applicant,
-        through="SmartExportBatchItem",
-        related_name="export_batches",
-    )
+        return f"Checklist {self.candidate_id}"
 
     class Meta:
-        ordering = ["-generated_at"]
-
-    def __str__(self) -> str:  # pragma: no cover
-        return self.batch_code
+        db_table = "candidate_documents"
 
 
-class SmartExportBatchItem(TimeStampedModel):
-    """Relación postulante ↔ lote con estado individual."""
-
-    class Status(models.TextChoices):
-        QUEUED = "queued", "En cola"
-        EXPORTED = "exported", "Exportado"
-        FAILED = "failed", "Fallido"
+class CandidateProcess(TimeStampedModel):
+    """Estado operativo del postulante (hitos BO)."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    batch = models.ForeignKey(
-        SmartExportBatch,
+    candidate = models.OneToOneField(
+        Candidate,
         on_delete=models.CASCADE,
-        related_name="items",
+        related_name="process",
     )
-    applicant = models.ForeignKey(
-        Applicant,
-        on_delete=models.CASCADE,
-        related_name="export_items",
-    )
-    status = models.CharField(
-        max_length=20, choices=Status.choices, default=Status.QUEUED
-    )
-    exported_at = models.DateTimeField(null=True, blank=True)
-    error_message = models.TextField(blank=True)
-
-    class Meta:
-        unique_together = ("batch", "applicant")
+    envio_dni_at = models.DateTimeField(null=True, blank=True)
+    test_psicologico_at = models.DateTimeField(null=True, blank=True)
+    validacion_pc_at = models.DateTimeField(null=True, blank=True)
+    evaluacion_dia0_at = models.DateTimeField(null=True, blank=True)
+    inicio_capacitacion_at = models.DateTimeField(null=True, blank=True)
+    fin_capacitacion_at = models.DateTimeField(null=True, blank=True)
+    conexion_ojt_at = models.DateTimeField(null=True, blank=True)
+    conexion_op_at = models.DateTimeField(null=True, blank=True)
+    pago_capacitacion_at = models.DateTimeField(null=True, blank=True)
+    estado_dia0 = models.CharField(max_length=64, blank=True, default="")
+    observaciones_dia0 = models.TextField(blank=True, default="")
+    estado_dia1 = models.CharField(max_length=64, blank=True, default="")
+    observaciones_dia1 = models.TextField(blank=True, default="")
+    windows_status = models.CharField(max_length=64, blank=True, default="")
+    asistencia_extra = models.JSONField(default=_empty_dict, blank=True)
+    status_final = models.CharField(max_length=64, blank=True, default="")
+    status_observacion = models.TextField(blank=True, default="")
+    updated_by = models.UUIDField(null=True, blank=True)
 
     def __str__(self) -> str:  # pragma: no cover
-        return f"{self.batch_id} -> {self.applicant_id} ({self.status})"
+        return f"Proceso {self.candidate_id}"
+
+    class Meta:
+        db_table = "candidate_process"
 
 
-class AuditLog(TimeStampedModel):
-    """Registro de auditoría para cualquier cambio relevante (RQ-X.1)."""
+class CandidateAssignment(TimeStampedModel):
+    """Datos contractuales y pagos proyectados."""
 
-    class Entity(models.TextChoices):
-        CAMPAIGN = "campaign", "Campaña"
-        LINK = "link", "Link"
-        APPLICANT = "applicant", "Postulante"
-        VERIFICATION = "verification", "Verificación"
-        EXPORT = "export", "Exportación"
-        OTHER = "other", "Otros"
+    class Estado(models.TextChoices):
+        ACTIVO = "activo", "Activo"
+        CESE = "cese", "Cese"
+        BAJA = "baja", "Baja"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    entity_type = models.CharField(max_length=32, choices=Entity.choices)
-    entity_id = models.UUIDField()
-    action = models.CharField(max_length=64)
-    actor_id = models.UUIDField(null=True, blank=True)
-    actor_name = models.CharField(max_length=255, blank=True)
-    ip_address = models.GenericIPAddressField(null=True, blank=True)
-    user_agent = models.CharField(max_length=512, blank=True)
-    payload = models.JSONField(default=dict, blank=True)
-
-    class Meta:
-        ordering = ["-created_at"]
-        indexes = [
-            models.Index(fields=["entity_type", "entity_id"]),
-            models.Index(fields=["actor_id"]),
-        ]
+    candidate = models.OneToOneField(
+        Candidate,
+        on_delete=models.CASCADE,
+        related_name="assignment",
+    )
+    tipo_contratacion = models.CharField(max_length=64, blank=True, default="")
+    razon_social = models.CharField(max_length=120, blank=True, default="")
+    remuneracion = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    bono_variable = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    bono_movilidad = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    bono_bienvenida = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    bono_permanencia = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    bono_asistencia = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    cargo_contractual = models.CharField(max_length=120, blank=True, default="")
+    regimen_pago = models.CharField(max_length=64, blank=True, default="")
+    fecha_inicio = models.DateField(null=True, blank=True)
+    fecha_fin = models.DateField(null=True, blank=True)
+    estado = models.CharField(
+        max_length=20, choices=Estado.choices, default=Estado.ACTIVO
+    )
 
     def __str__(self) -> str:  # pragma: no cover
-        return f"{self.entity_type}:{self.entity_id} - {self.action}"
+        return f"Contrato {self.candidate_id}"
+
+    class Meta:
+        db_table = "candidate_assignment"
 
 
 __all__ = [
-    "AuditLog",
-    "Applicant",
-    "ApplicantDocument",
     "Campaign",
-    "RecruitmentLink",
-    "SmartExportBatch",
-    "SmartExportBatchItem",
-    "Verification",
+    "Blacklist",
+    "Link",
+    "Candidate",
+    "CandidateDocuments",
+    "CandidateProcess",
+    "CandidateAssignment",
 ]

@@ -36,3 +36,26 @@ class LoginSerializer(serializers.Serializer):
 
 class SessionIntrospectSerializer(serializers.Serializer):
     token = serializers.CharField(max_length=4096, trim_whitespace=True)
+
+
+class LoginResponseSerializer(serializers.Serializer):
+    access_token = serializers.CharField()
+    token_type = serializers.CharField()
+    expires_in = serializers.IntegerField()
+    session_id = serializers.CharField(allow_blank=True, required=False)
+    message = serializers.CharField()
+    session = serializers.DictField(child=serializers.CharField(), required=False)
+
+
+class MessageResponseSerializer(serializers.Serializer):
+    message = serializers.CharField()
+
+
+class SessionStatusSerializer(serializers.Serializer):
+    active = serializers.BooleanField()
+    session_id = serializers.CharField(required=False, allow_blank=True)
+    application_name = serializers.CharField(required=False, allow_blank=True)
+    issued_at = serializers.CharField(required=False, allow_blank=True)
+    last_seen_at = serializers.CharField(required=False, allow_blank=True)
+    ip_address = serializers.CharField(required=False, allow_blank=True)
+    user_agent = serializers.CharField(required=False, allow_blank=True)

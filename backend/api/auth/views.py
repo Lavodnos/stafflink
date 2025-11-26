@@ -2,17 +2,23 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Mapping
 from typing import Any
 
 from django.conf import settings
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .client import get_iam_client
-from .serializers import LoginSerializer, SessionIntrospectSerializer
+from .serializers import (LoginResponseSerializer, LoginSerializer,
+                          MessageResponseSerializer,
+                          SessionIntrospectSerializer, SessionStatusSerializer)
+
+logger = logging.getLogger(__name__)
 
 LOGIN_SUCCESS_MESSAGE = "Inicio de sesión exitoso."
 DEFAULT_LOGIN_ERROR_MESSAGE = "No pudimos validar las credenciales proporcionadas."
@@ -47,7 +53,18 @@ class LoginView(APIView):
 
     authentication_classes: list[Any] = []
     permission_classes: list[Any] = []
+    serializer_class = LoginSerializer
 
+    @extend_schema(
+        tags=["auth"],
+        request=LoginSerializer,
+        responses={
+            200: LoginResponseSerializer,
+            401: OpenApiResponse(
+                description="Credenciales inválidas o sesión ya activa."
+            ),
+        },
+    )
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -83,7 +100,16 @@ class LogoutView(APIView):
 
     authentication_classes: list[Any] = []
     permission_classes: list[Any] = []
+    serializer_class = MessageResponseSerializer
 
+    @extend_schema(
+        tags=["auth"],
+        request=None,
+        responses={
+            200: MessageResponseSerializer,
+            401: OpenApiResponse(description="No se envió token o cookie"),
+        },
+    )
     def post(self, request):
         token = _get_token_from_header(request) or _get_token_from_cookie(request)
         if not token:
@@ -110,7 +136,12 @@ class SessionView(APIView):
 
     authentication_classes: list[Any] = []
     permission_classes: list[Any] = []
+    serializer_class = SessionStatusSerializer
 
+    @extend_schema(
+        tags=["auth"],
+        responses={200: SessionStatusSerializer},
+    )
     def get(self, request):
         token = _get_token_from_cookie(request)
         if not token:
@@ -118,6 +149,11 @@ class SessionView(APIView):
 
         return self._introspect_and_respond(token, clear_cookie=True)
 
+    @extend_schema(
+        tags=["auth"],
+        request=SessionIntrospectSerializer,
+        responses={200: SessionStatusSerializer},
+    )
     def post(self, request):
         serializer = SessionIntrospectSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -136,7 +172,54 @@ class SessionView(APIView):
                 _delete_auth_cookie(response)
             return response
 
+        # Normalizamos permisos para que el frontend pueda mostrarlos sin depender
+        # del formato exacto que entregue IAM.
+        perms = _normalize_permissions(payload)
+        if not perms:
+            from .authentication import _fetch_directory_permissions  # lazy import
+
+            try:
+                perms = _fetch_directory_permissions(token, payload, on_error="raise")
+            except APIException as exc:
+                return Response(_format_api_exception(exc), status=exc.status_code)
+            except Exception as exc:
+                user_id = payload.get("sub") or (payload.get("user") or {}).get("id")
+                logger.warning(
+                    "Failed to fetch permissions from Directory (user=%s): %s",
+                    user_id,
+                    exc,
+                    exc_info=False,
+                )
+                return Response(
+                    {
+                        "error": "IAM_DIRECTORY_UNAVAILABLE",
+                        "message": "No pudimos obtener permisos desde IAM Directory.",
+                    },
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                )
+
+        if perms:
+            payload["permissions"] = perms
+
         return Response(payload, status=status.HTTP_200_OK)
+
+
+def _normalize_permissions(payload: Mapping[str, Any]) -> list[str]:
+    raw = payload.get("permissions") or payload.get("perms")
+    if isinstance(raw, (list, tuple)):
+        return [str(item).lower() for item in raw]
+
+    # Intentamos extraer permisos desde la sección applications
+    if isinstance(payload, Mapping):
+        apps = payload.get("applications")
+        if isinstance(apps, (list, tuple)):
+            from .authentication import _extract_app_permissions  # lazy import
+
+            app_perms = _extract_app_permissions(payload)  # type: ignore[arg-type]
+            if app_perms:
+                return app_perms
+
+    return []
 
 
 def _delete_auth_cookie(response: Response) -> None:
