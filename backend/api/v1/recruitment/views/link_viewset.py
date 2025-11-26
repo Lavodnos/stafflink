@@ -79,9 +79,8 @@ class LinkViewSet(viewsets.ModelViewSet):
         if request_has_permission(self.request, permission):
             return
         link = self.get_object()
-        if (
-            link.user_id == get_user_id(self.request)
-            and request_has_permission(self.request, f"{permission}")
+        if link.user_id == get_user_id(self.request) and request_has_permission(
+            self.request, f"{permission}"
         ):
             return
         self.permission_denied(self.request, message="No tiene permisos suficientes")

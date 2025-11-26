@@ -194,7 +194,9 @@ IAM_CONTROL_APP_ID = os.environ.get(
 )
 IAM_TIMEOUT_SECONDS = float(os.environ.get("IAM_TIMEOUT_SECONDS", "10"))
 IAM_CAPTCHA_REQUIRED = _env_bool(os.environ.get("IAM_CAPTCHA_REQUIRED"), default=False)
-IAM_SERVICE_TOKEN = os.environ.get("IAM_SERVICE_TOKEN")  # opcional, para consultar Directory
+IAM_SERVICE_TOKEN = os.environ.get(
+    "IAM_SERVICE_TOKEN"
+)  # opcional, para consultar Directory
 IAM_SERVICE_USER = os.environ.get("IAM_SERVICE_USER")
 IAM_SERVICE_PASSWORD = os.environ.get("IAM_SERVICE_PASSWORD")
 

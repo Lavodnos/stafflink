@@ -5,8 +5,7 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from django.core.validators import (MaxValueValidator, MinValueValidator,
-                                    RegexValidator)
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
 from django.utils import timezone
 
@@ -35,7 +34,7 @@ class Campaign(TimeStampedModel):
         INACTIVA = "inactiva", "Inactiva"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    codigo = models.CharField(max_length=50, unique=True)
+    codigo = models.CharField(max_length=50, unique=True, null=True, blank=True)
     area = models.CharField(max_length=120, blank=True, default="")
     nombre = models.CharField(max_length=255)
     sede = models.CharField(max_length=255, blank=True, default="")
@@ -176,8 +175,12 @@ class Candidate(TimeStampedModel):
     distrito = models.CharField(max_length=120, blank=True, default="")
     direccion = models.CharField(max_length=255, blank=True, default="")
     has_callcenter_experience = models.BooleanField(default=False)
-    callcenter_experience_type = models.CharField(max_length=255, blank=True, default="")
-    callcenter_experience_time = models.CharField(max_length=100, blank=True, default="")
+    callcenter_experience_type = models.CharField(
+        max_length=255, blank=True, default=""
+    )
+    callcenter_experience_time = models.CharField(
+        max_length=100, blank=True, default=""
+    )
     other_experience_type = models.CharField(max_length=255, blank=True, default="")
     other_experience_time = models.CharField(max_length=100, blank=True, default="")
     enteraste_oferta = models.CharField(max_length=255, blank=True, default="")

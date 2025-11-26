@@ -8,6 +8,9 @@ import { LinksPage } from './pages/LinksPage';
 import { CandidatesPage } from './pages/CandidatesPage';
 import { PublicApplyPage } from './pages/PublicApplyPage';
 import { RequireAuth } from './routes/RequireAuth';
+import { Shell } from './components/layout/Shell';
+import { Header } from './components/layout/Header';
+import { UserMenu } from './components/layout/UserMenu';
 
 function App() {
   return (
@@ -18,7 +21,18 @@ function App() {
         path="/"
         element={(
           <RequireAuth>
-            <DashboardPage />
+            <Shell
+              renderHeader={(openNav) => (
+                <Header
+                  title="Dashboard"
+                  subtitle="Resumen y accesos rápidos"
+                  onMenuClick={openNav}
+                  actions={<UserMenu />}
+                />
+              )}
+            >
+              <DashboardPage />
+            </Shell>
           </RequireAuth>
         )}
       />
@@ -26,7 +40,13 @@ function App() {
         path="/campaigns"
         element={(
           <RequireAuth>
-            <CampaignsPage />
+            <Shell
+              renderHeader={(openNav) => (
+                <Header title="Campañas" subtitle="Gestiona campañas" onMenuClick={openNav} actions={<UserMenu />} />
+              )}
+            >
+              <CampaignsPage />
+            </Shell>
           </RequireAuth>
         )}
       />
@@ -34,7 +54,13 @@ function App() {
         path="/blacklist"
         element={(
           <RequireAuth>
-            <BlacklistPage />
+            <Shell
+              renderHeader={(openNav) => (
+                <Header title="Blacklist" subtitle="Personas vetadas" onMenuClick={openNav} actions={<UserMenu />} />
+              )}
+            >
+              <BlacklistPage />
+            </Shell>
           </RequireAuth>
         )}
       />
@@ -42,7 +68,13 @@ function App() {
         path="/links"
         element={(
           <RequireAuth>
-            <LinksPage />
+            <Shell
+              renderHeader={(openNav) => (
+                <Header title="Links" subtitle="Genera links de reclutamiento" onMenuClick={openNav} actions={<UserMenu />} />
+              )}
+            >
+              <LinksPage />
+            </Shell>
           </RequireAuth>
         )}
       />
@@ -50,7 +82,13 @@ function App() {
         path="/candidates"
         element={(
           <RequireAuth>
-            <CandidatesPage />
+            <Shell
+              renderHeader={(openNav) => (
+                <Header title="Candidatos" subtitle="Ficha, documentos y proceso" onMenuClick={openNav} actions={<UserMenu />} />
+              )}
+            >
+              <CandidatesPage />
+            </Shell>
           </RequireAuth>
         )}
       />

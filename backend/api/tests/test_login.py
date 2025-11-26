@@ -61,7 +61,9 @@ class LoginViewTests(APITestCase):
         self.assertEqual(int(cookie["max-age"]), iam_response["expires_in"])
 
     @patch("api.auth.views.get_iam_client")
-    def test_login_invalid_credentials_message(self, mock_get_client: MagicMock) -> None:
+    def test_login_invalid_credentials_message(
+        self, mock_get_client: MagicMock
+    ) -> None:
         iam_client = MagicMock()
         mock_get_client.return_value = iam_client
         error_detail = {"error": "INVALID_CREDENTIALS"}
@@ -263,9 +265,7 @@ class LogoutViewTests(APITestCase):
         iam_client = MagicMock()
         mock_get_client.return_value = iam_client
 
-        response = self.client.post(
-            self.url, HTTP_AUTHORIZATION="Bearer header-token"
-        )
+        response = self.client.post(self.url, HTTP_AUTHORIZATION="Bearer header-token")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         iam_client.logout.assert_called_once_with("header-token")

@@ -22,12 +22,17 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.UUIDField(
-                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
                     ),
                 ),
                 (
                     "created_at",
-                    models.DateTimeField(default=django.utils.timezone.now, editable=False),
+                    models.DateTimeField(
+                        default=django.utils.timezone.now, editable=False
+                    ),
                 ),
                 ("updated_at", models.DateTimeField(auto_now=True)),
                 ("codigo", models.CharField(max_length=50, unique=True)),
@@ -54,49 +59,103 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.UUIDField(
-                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
                     ),
                 ),
                 (
                     "created_at",
-                    models.DateTimeField(default=django.utils.timezone.now, editable=False),
+                    models.DateTimeField(
+                        default=django.utils.timezone.now, editable=False
+                    ),
                 ),
                 ("updated_at", models.DateTimeField(auto_now=True)),
-                ("tipo_documento", models.CharField(choices=[("dni", "DNI"), ("ce", "Carné extranjería")], max_length=10)),
+                (
+                    "tipo_documento",
+                    models.CharField(
+                        choices=[("dni", "DNI"), ("ce", "Carné extranjería")],
+                        max_length=10,
+                    ),
+                ),
                 (
                     "numero_documento",
                     models.CharField(
                         max_length=16,
-                        validators=[django.core.validators.RegexValidator("^[0-9A-Za-z]{4,16}$", "Formato inválido")],
+                        validators=[
+                            django.core.validators.RegexValidator(
+                                "^[0-9A-Za-z]{4,16}$", "Formato inválido"
+                            )
+                        ],
                     ),
                 ),
                 ("apellido_paterno", models.CharField(max_length=150)),
-                ("apellido_materno", models.CharField(blank=True, default="", max_length=150)),
+                (
+                    "apellido_materno",
+                    models.CharField(blank=True, default="", max_length=150),
+                ),
                 ("nombres_completos", models.CharField(max_length=255)),
                 ("telefono", models.CharField(max_length=32)),
-                ("telefono_referencia", models.CharField(blank=True, default="", max_length=32)),
+                (
+                    "telefono_referencia",
+                    models.CharField(blank=True, default="", max_length=32),
+                ),
                 ("email", models.EmailField(max_length=254)),
                 ("sexo", models.CharField(blank=True, default="", max_length=50)),
                 ("fecha_nacimiento", models.DateField(blank=True, null=True)),
                 ("edad", models.PositiveSmallIntegerField(blank=True, null=True)),
-                ("estado_civil", models.CharField(blank=True, default="", max_length=64)),
-                ("numero_hijos", models.PositiveSmallIntegerField(blank=True, null=True)),
-                ("nivel_academico", models.CharField(blank=True, default="", max_length=120)),
+                (
+                    "estado_civil",
+                    models.CharField(blank=True, default="", max_length=64),
+                ),
+                (
+                    "numero_hijos",
+                    models.PositiveSmallIntegerField(blank=True, null=True),
+                ),
+                (
+                    "nivel_academico",
+                    models.CharField(blank=True, default="", max_length=120),
+                ),
                 ("carrera", models.CharField(blank=True, default="", max_length=120)),
-                ("nacionalidad", models.CharField(blank=True, default="", max_length=120)),
-                ("lugar_residencia", models.CharField(blank=True, default="", max_length=255)),
+                (
+                    "nacionalidad",
+                    models.CharField(blank=True, default="", max_length=120),
+                ),
+                (
+                    "lugar_residencia",
+                    models.CharField(blank=True, default="", max_length=255),
+                ),
                 ("distrito", models.CharField(blank=True, default="", max_length=120)),
                 ("direccion", models.CharField(blank=True, default="", max_length=255)),
                 ("has_callcenter_experience", models.BooleanField(default=False)),
-                ("callcenter_experience_type", models.CharField(blank=True, default="", max_length=255)),
-                ("callcenter_experience_time", models.CharField(blank=True, default="", max_length=100)),
-                ("other_experience_type", models.CharField(blank=True, default="", max_length=255)),
-                ("other_experience_time", models.CharField(blank=True, default="", max_length=100)),
-                ("enteraste_oferta", models.CharField(blank=True, default="", max_length=255)),
+                (
+                    "callcenter_experience_type",
+                    models.CharField(blank=True, default="", max_length=255),
+                ),
+                (
+                    "callcenter_experience_time",
+                    models.CharField(blank=True, default="", max_length=100),
+                ),
+                (
+                    "other_experience_type",
+                    models.CharField(blank=True, default="", max_length=255),
+                ),
+                (
+                    "other_experience_time",
+                    models.CharField(blank=True, default="", max_length=100),
+                ),
+                (
+                    "enteraste_oferta",
+                    models.CharField(blank=True, default="", max_length=255),
+                ),
                 ("observacion", models.TextField(blank=True, default="")),
                 ("modalidad", models.CharField(blank=True, default="", max_length=20)),
                 ("condicion", models.CharField(blank=True, default="", max_length=20)),
-                ("hora_gestion", models.CharField(blank=True, default="", max_length=64)),
+                (
+                    "hora_gestion",
+                    models.CharField(blank=True, default="", max_length=64),
+                ),
                 ("descanso", models.CharField(blank=True, default="", max_length=64)),
                 ("created_by", models.UUIDField(blank=True, null=True)),
                 ("updated_by", models.UUIDField(blank=True, null=True)),
@@ -112,30 +171,81 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.UUIDField(
-                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
                     ),
                 ),
                 (
                     "created_at",
-                    models.DateTimeField(default=django.utils.timezone.now, editable=False),
+                    models.DateTimeField(
+                        default=django.utils.timezone.now, editable=False
+                    ),
                 ),
                 ("updated_at", models.DateTimeField(auto_now=True)),
-                ("tipo_contratacion", models.CharField(blank=True, default="", max_length=64)),
-                ("razon_social", models.CharField(blank=True, default="", max_length=120)),
-                ("remuneracion", models.DecimalField(blank=True, decimal_places=2, max_digits=10, null=True)),
-                ("bono_variable", models.DecimalField(blank=True, decimal_places=2, max_digits=10, null=True)),
-                ("bono_movilidad", models.DecimalField(blank=True, decimal_places=2, max_digits=10, null=True)),
-                ("bono_bienvenida", models.DecimalField(blank=True, decimal_places=2, max_digits=10, null=True)),
-                ("bono_permanencia", models.DecimalField(blank=True, decimal_places=2, max_digits=10, null=True)),
-                ("bono_asistencia", models.DecimalField(blank=True, decimal_places=2, max_digits=10, null=True)),
-                ("cargo_contractual", models.CharField(blank=True, default="", max_length=120)),
-                ("regimen_pago", models.CharField(blank=True, default="", max_length=64)),
+                (
+                    "tipo_contratacion",
+                    models.CharField(blank=True, default="", max_length=64),
+                ),
+                (
+                    "razon_social",
+                    models.CharField(blank=True, default="", max_length=120),
+                ),
+                (
+                    "remuneracion",
+                    models.DecimalField(
+                        blank=True, decimal_places=2, max_digits=10, null=True
+                    ),
+                ),
+                (
+                    "bono_variable",
+                    models.DecimalField(
+                        blank=True, decimal_places=2, max_digits=10, null=True
+                    ),
+                ),
+                (
+                    "bono_movilidad",
+                    models.DecimalField(
+                        blank=True, decimal_places=2, max_digits=10, null=True
+                    ),
+                ),
+                (
+                    "bono_bienvenida",
+                    models.DecimalField(
+                        blank=True, decimal_places=2, max_digits=10, null=True
+                    ),
+                ),
+                (
+                    "bono_permanencia",
+                    models.DecimalField(
+                        blank=True, decimal_places=2, max_digits=10, null=True
+                    ),
+                ),
+                (
+                    "bono_asistencia",
+                    models.DecimalField(
+                        blank=True, decimal_places=2, max_digits=10, null=True
+                    ),
+                ),
+                (
+                    "cargo_contractual",
+                    models.CharField(blank=True, default="", max_length=120),
+                ),
+                (
+                    "regimen_pago",
+                    models.CharField(blank=True, default="", max_length=64),
+                ),
                 ("fecha_inicio", models.DateField(blank=True, null=True)),
                 ("fecha_fin", models.DateField(blank=True, null=True)),
                 (
                     "estado",
                     models.CharField(
-                        choices=[("activo", "Activo"), ("cese", "Cese"), ("baja", "Baja")],
+                        choices=[
+                            ("activo", "Activo"),
+                            ("cese", "Cese"),
+                            ("baja", "Baja"),
+                        ],
                         default="activo",
                         max_length=20,
                     ),
@@ -151,12 +261,17 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.UUIDField(
-                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
                     ),
                 ),
                 (
                     "created_at",
-                    models.DateTimeField(default=django.utils.timezone.now, editable=False),
+                    models.DateTimeField(
+                        default=django.utils.timezone.now, editable=False
+                    ),
                 ),
                 ("updated_at", models.DateTimeField(auto_now=True)),
                 ("cv_entregado", models.BooleanField(default=False)),
@@ -168,7 +283,11 @@ class Migration(migrations.Migration):
                 (
                     "status",
                     models.CharField(
-                        choices=[("pendiente", "Pendiente"), ("completo", "Completo"), ("observado", "Observado")],
+                        choices=[
+                            ("pendiente", "Pendiente"),
+                            ("completo", "Completo"),
+                            ("observado", "Observado"),
+                        ],
                         default="pendiente",
                         max_length=20,
                     ),
@@ -185,12 +304,17 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.UUIDField(
-                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
                     ),
                 ),
                 (
                     "created_at",
-                    models.DateTimeField(default=django.utils.timezone.now, editable=False),
+                    models.DateTimeField(
+                        default=django.utils.timezone.now, editable=False
+                    ),
                 ),
                 ("updated_at", models.DateTimeField(auto_now=True)),
                 ("envio_dni_at", models.DateTimeField(blank=True, null=True)),
@@ -202,16 +326,30 @@ class Migration(migrations.Migration):
                 ("conexion_ojt_at", models.DateTimeField(blank=True, null=True)),
                 ("conexion_op_at", models.DateTimeField(blank=True, null=True)),
                 ("pago_capacitacion_at", models.DateTimeField(blank=True, null=True)),
-                ("estado_dia0", models.CharField(blank=True, default="", max_length=64)),
+                (
+                    "estado_dia0",
+                    models.CharField(blank=True, default="", max_length=64),
+                ),
                 ("observaciones_dia0", models.TextField(blank=True, default="")),
-                ("estado_dia1", models.CharField(blank=True, default="", max_length=64)),
+                (
+                    "estado_dia1",
+                    models.CharField(blank=True, default="", max_length=64),
+                ),
                 ("observaciones_dia1", models.TextField(blank=True, default="")),
-                ("windows_status", models.CharField(blank=True, default="", max_length=64)),
+                (
+                    "windows_status",
+                    models.CharField(blank=True, default="", max_length=64),
+                ),
                 (
                     "asistencia_extra",
-                    models.JSONField(blank=True, default=api.v1.recruitment.models._empty_dict),
+                    models.JSONField(
+                        blank=True, default=api.v1.recruitment.models._empty_dict
+                    ),
                 ),
-                ("status_final", models.CharField(blank=True, default="", max_length=64)),
+                (
+                    "status_final",
+                    models.CharField(blank=True, default="", max_length=64),
+                ),
                 ("status_observacion", models.TextField(blank=True, default="")),
                 ("updated_by", models.UUIDField(blank=True, null=True)),
             ],
@@ -225,12 +363,17 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.UUIDField(
-                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
                     ),
                 ),
                 (
                     "created_at",
-                    models.DateTimeField(default=django.utils.timezone.now, editable=False),
+                    models.DateTimeField(
+                        default=django.utils.timezone.now, editable=False
+                    ),
                 ),
                 ("updated_at", models.DateTimeField(auto_now=True)),
                 ("grupo", models.CharField(blank=True, default="", max_length=50)),
@@ -251,12 +394,19 @@ class Migration(migrations.Migration):
                         ],
                     ),
                 ),
-                ("expires_at", models.DateTimeField(help_text="Fecha/hora límite del link")),
+                (
+                    "expires_at",
+                    models.DateTimeField(help_text="Fecha/hora límite del link"),
+                ),
                 ("notes", models.TextField(blank=True, default="")),
                 (
                     "modalidad",
                     models.CharField(
-                        choices=[("presencial", "Presencial"), ("remoto", "Remoto"), ("hibrido", "Híbrido")],
+                        choices=[
+                            ("presencial", "Presencial"),
+                            ("remoto", "Remoto"),
+                            ("hibrido", "Híbrido"),
+                        ],
                         default="presencial",
                         max_length=20,
                     ),
@@ -264,7 +414,11 @@ class Migration(migrations.Migration):
                 (
                     "condicion",
                     models.CharField(
-                        choices=[("full_time", "Full Time"), ("part_time", "Part Time"), ("flex", "Flexible")],
+                        choices=[
+                            ("full_time", "Full Time"),
+                            ("part_time", "Part Time"),
+                            ("flex", "Flexible"),
+                        ],
                         default="full_time",
                         max_length=20,
                     ),
@@ -272,13 +426,20 @@ class Migration(migrations.Migration):
                 (
                     "estado",
                     models.CharField(
-                        choices=[("activo", "Activo"), ("expirado", "Expirado"), ("revocado", "Revocado")],
+                        choices=[
+                            ("activo", "Activo"),
+                            ("expirado", "Expirado"),
+                            ("revocado", "Revocado"),
+                        ],
                         db_index=True,
                         default="activo",
                         max_length=20,
                     ),
                 ),
-                ("hora_gestion", models.CharField(blank=True, default="", max_length=64)),
+                (
+                    "hora_gestion",
+                    models.CharField(blank=True, default="", max_length=64),
+                ),
                 ("descanso", models.CharField(blank=True, default="", max_length=64)),
                 ("created_by", models.UUIDField(blank=True, null=True)),
                 ("updated_by", models.UUIDField(blank=True, null=True)),
@@ -338,12 +499,17 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.UUIDField(
-                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
                     ),
                 ),
                 (
                     "created_at",
-                    models.DateTimeField(default=django.utils.timezone.now, editable=False),
+                    models.DateTimeField(
+                        default=django.utils.timezone.now, editable=False
+                    ),
                 ),
                 ("updated_at", models.DateTimeField(auto_now=True)),
                 ("dni", models.CharField(max_length=16, unique=True)),

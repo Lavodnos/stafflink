@@ -36,7 +36,7 @@ class LinkViewSetTests(APITestCase):
         url = reverse("links-list")
         response = self.client.get(
             url,
-            **self._auth_headers(user_id=self.owner_id, permissions=["links.read_own"]),
+            **self._auth_headers(user_id=self.owner_id, permissions=["links.read"]),
         )
 
         self.assertEqual(response.status_code, 200)
@@ -47,37 +47,31 @@ class LinkViewSetTests(APITestCase):
         url = reverse("links-expire", args=[self.main_link.pk])
         response = self.client.post(
             url,
-            **self._auth_headers(
-                user_id=self.owner_id, permissions=["links.expire_own"]
-            ),
+            **self._auth_headers(user_id=self.owner_id, permissions=["links.close"]),
         )
 
         self.assertEqual(response.status_code, 200)
         self.main_link.refresh_from_db()
-        self.assertEqual(
-            self.main_link.status, "expired"
-        )
+        self.assertEqual(self.main_link.estado, "expirado")
 
     def test_non_owner_cannot_expire_without_global_permission(self) -> None:
         url = reverse("links-expire", args=[self.main_link.pk])
         response = self.client.post(
             url,
-            **self._auth_headers(
-                user_id=self.other_owner_id, permissions=["links.expire_own"]
-            ),
+            **self._auth_headers(user_id=self.other_owner_id, permissions=["links.close"]),
         )
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)
         self.main_link.refresh_from_db()
-        self.assertEqual(
-            self.main_link.status, "active"
-        )
+        self.assertEqual(self.main_link.estado, "activo")
 
     def test_list_all_when_user_has_read_all_permission(self) -> None:
         url = reverse("links-list")
         response = self.client.get(
             url,
-            **self._auth_headers(user_id=self.owner_id, permissions=["links.read_all"]),
+            **self._auth_headers(
+                user_id=self.owner_id, permissions=["links.read", "links.manage"]
+            ),
         )
 
         self.assertEqual(response.status_code, 200)

@@ -122,7 +122,9 @@ def update_process(
 def update_assignment(
     *, candidate: models.Candidate, data: dict[str, object]
 ) -> models.CandidateAssignment:
-    assignment, _ = models.CandidateAssignment.objects.get_or_create(candidate=candidate)
+    assignment, _ = models.CandidateAssignment.objects.get_or_create(
+        candidate=candidate
+    )
     for field, value in data.items():
         setattr(assignment, field, value)
     assignment.save()

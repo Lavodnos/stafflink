@@ -4,8 +4,10 @@ from django.utils import timezone
 from rest_framework import generics, permissions
 
 from .. import models
-from ..serializers.public_serializers import (PublicCandidateSerializer,
-                                              PublicLinkSerializer)
+from ..serializers.public_serializers import (
+    PublicCandidateSerializer,
+    PublicLinkSerializer,
+)
 
 
 class PublicLinkDetailView(generics.RetrieveAPIView):
@@ -18,10 +20,7 @@ class PublicLinkDetailView(generics.RetrieveAPIView):
 
     def get_object(self):
         link = super().get_object()
-        if (
-            link.estado != models.Link.Estado.ACTIVO
-            or link.expires_at < timezone.now()
-        ):
+        if link.estado != models.Link.Estado.ACTIVO or link.expires_at < timezone.now():
             raise generics.Http404
         return link
 

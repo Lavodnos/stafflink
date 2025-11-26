@@ -9,8 +9,7 @@ from .views.blacklist_viewset import BlacklistViewSet
 from .views.campaign_viewset import CampaignViewSet
 from .views.candidate_viewset import CandidateViewSet
 from .views.link_viewset import LinkViewSet
-from .views.public_views import (PublicCandidateCreateView,
-                                 PublicLinkDetailView)
+from .views.public_views import PublicCandidateCreateView, PublicLinkDetailView
 
 router = DefaultRouter()
 router.register(r"campaigns", CampaignViewSet, basename="campaigns")
@@ -21,7 +20,9 @@ router.register(r"candidates", CandidateViewSet, basename="candidates")
 public_patterns = (
     [
         path("links/<slug:slug>/", PublicLinkDetailView.as_view(), name="public-link"),
-        path("candidates", PublicCandidateCreateView.as_view(), name="public-candidate"),
+        path(
+            "candidates", PublicCandidateCreateView.as_view(), name="public-candidate"
+        ),
     ],
     "public",
 )

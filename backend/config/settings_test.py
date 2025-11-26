@@ -2,7 +2,7 @@
 
 from .settings import *  # noqa: F401,F403
 
-DATABASES["default"] = {  # type: ignore[name-defined]
+DATABASES["default"] = {  # type: ignore[name-defined]  # noqa: F405
     "ENGINE": "django.db.backends.sqlite3",
-    "NAME": BASE_DIR / "test.sqlite3",  # type: ignore[name-defined]
+    "NAME": BASE_DIR / "test.sqlite3",  # type: ignore[name-defined]  # noqa: F405
 }

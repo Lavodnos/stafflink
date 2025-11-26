@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import uuid
 from typing import Any, Literal, Optional
 
 from django.conf import settings
@@ -14,6 +15,7 @@ from .exceptions import IAMServiceError
 from .service_token import clear_cached_service_token, get_service_token
 
 logger = logging.getLogger(__name__)
+
 
 def _get_token_from_request(request) -> Optional[str]:
     """Extract token from Authorization: Bearer or authentication cookie."""
@@ -60,7 +62,7 @@ class IAMCookieAuthentication(BaseAuthentication):
 
         if perms:
             payload["permissions"] = perms
-        
+
         # Construimos un user anónimo enriquecido con permisos y datos básicos
         user = AnonymousUser()
         setattr(user, "permissions", perms)
@@ -92,7 +94,9 @@ def _extract_app_permissions(payload: Any) -> list[str]:
         if app_id and candidate_id != app_id:
             continue
 
-        collected.update(_normalize_permission_list(app.get("permissions") or app.get("perms")))
+        collected.update(
+            _normalize_permission_list(app.get("permissions") or app.get("perms"))
+        )
 
         # Agrega permisos declarados dentro de cada rol devuelto por Directory
         for role in app.get("roles") or []:
@@ -106,12 +110,20 @@ def _extract_app_permissions(payload: Any) -> list[str]:
 
 
 def _fetch_directory_permissions(
-    token: str, payload: dict[str, Any], *, on_error: Literal["raise", "empty"] = "empty"
+    token: str,
+    payload: dict[str, Any],
+    *,
+    on_error: Literal["raise", "empty"] = "empty",
 ) -> list[str]:
     """Consulta IAM Directory para recuperar permisos del usuario para esta app."""
 
     user_id = payload.get("sub") or (payload.get("user") or {}).get("id")
     if not user_id:
+        return []
+    # Si el user_id no es un UUID válido, evitamos llamar a Directory
+    try:
+        uuid.UUID(str(user_id))
+    except Exception:
         return []
 
     client = get_iam_client()

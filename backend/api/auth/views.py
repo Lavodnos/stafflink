@@ -14,24 +14,22 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .client import get_iam_client
-from .serializers import (LoginResponseSerializer, LoginSerializer,
-                          MessageResponseSerializer,
-                          SessionIntrospectSerializer, SessionStatusSerializer)
+from .serializers import (
+    LoginResponseSerializer,
+    LoginSerializer,
+    MessageResponseSerializer,
+    SessionIntrospectSerializer,
+    SessionStatusSerializer,
+)
 
 logger = logging.getLogger(__name__)
 
 LOGIN_SUCCESS_MESSAGE = "Inicio de sesión exitoso."
 DEFAULT_LOGIN_ERROR_MESSAGE = "No pudimos validar las credenciales proporcionadas."
-SERVER_SIDE_LOGIN_ERROR_MESSAGE = (
-    "El servicio de identidad no está disponible en este momento. Intenta nuevamente más tarde."
-)
-SESSION_ALREADY_ACTIVE_MESSAGE = (
-    'Ya existe una sesión activa en otro navegador. Presiona nuevamente "Ingresar" para cerrarla y continuar aquí.'
-)
+SERVER_SIDE_LOGIN_ERROR_MESSAGE = "El servicio de identidad no está disponible en este momento. Intenta nuevamente más tarde."
+SESSION_ALREADY_ACTIVE_MESSAGE = 'Ya existe una sesión activa en otro navegador. Presiona nuevamente "Ingresar" para cerrarla y continuar aquí.'
 LOGOUT_SUCCESS_MESSAGE = "Sesión cerrada correctamente."
-TOKEN_REQUIRED_MESSAGE = (
-    "Debes enviar Authorization: Bearer <token> o contar con la cookie de autenticación para cerrar la sesión."
-)
+TOKEN_REQUIRED_MESSAGE = "Debes enviar Authorization: Bearer <token> o contar con la cookie de autenticación para cerrar la sesión."
 LOGIN_ERROR_MESSAGES = {
     "INVALID_CREDENTIALS": "El usuario o la contraseña no coinciden.",
     "USER_NOT_FOUND": "El usuario ingresado no existe o no tiene acceso a Stafflink.",

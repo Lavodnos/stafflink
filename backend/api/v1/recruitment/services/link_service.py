@@ -43,9 +43,7 @@ def update_link(
     return link
 
 
-def set_status(
-    *, link: models.Link, estado: str, actor_id: str | None
-) -> models.Link:
+def set_status(*, link: models.Link, estado: str, actor_id: str | None) -> models.Link:
     if link.estado == estado:
         return link
     if estado not in models.Link.Estado.values:
