@@ -1,0 +1,6 @@
+- Refreshed frontend layout tokens/accessibility and made campaign code optional.
+- Added AREA/SEDE constants and selects; Campaign code toggle in constants.
+- Backend: Campaign.codigo now nullable (migration 0002), serializer allows null/blank and normalizes uppercase.
+- Frontend: normalizes codigo, sends null if empty; edit loads ''.
+- Lint/test frontend OK; need to run backend migrate with DB up.
+- Pending: verification/export flows (tests skipped), coverage uplift in services, E2E/Sonar not set.

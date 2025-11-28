@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
-
+import { useToastStore } from '../components/common/Toast';
 import { Card, Field, Input, SectionHeader, Select, Textarea } from '../components/ui';
 import { ApiError } from '../lib/apiError';
 import { usePermission } from '../modules/auth/usePermission';
@@ -22,10 +22,14 @@ export function CandidatesPage() {
   const canEditDocs = usePermission('candidates.process');
   const canEditProceso = usePermission('candidates.process');
   const canEditContrato = usePermission('candidates.contract');
+  const addToast = useToastStore((s) => s.add);
 
   const { data: list = [], isLoading: listLoading } = useCandidates(canRead);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('datos');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const pageSize = 6;
 
   const { data: detail, isLoading: detailLoading } = useCandidate(canRead ? selectedId ?? undefined : undefined);
 
@@ -66,96 +70,156 @@ export function CandidatesPage() {
   const updateProceso = useUpdateProcess();
   const updateContrato = useUpdateAssignment();
 
+  const filtered = useMemo(() => {
+    const term = search.toLowerCase().trim();
+    return term
+      ? list.filter((c) =>
+          [c.nombres_completos, c.numero_documento, c.modalidad, c.condicion].some((v) =>
+            v?.toLowerCase().includes(term),
+          ),
+        )
+      : list;
+  }, [list, search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const paged = filtered.slice((page - 1) * pageSize, page * pageSize);
+
   const onSubmitDatos = async (data: Candidate) => {
     if (!selectedId || !canEditDatos) throw new ApiError('Sin permiso para actualizar datos', 403);
     await updateCandidate.mutateAsync({ id: selectedId, payload: data });
+    addToast({ type: 'success', message: 'Datos actualizados' });
   };
 
   const onSubmitDocs = async (data: CandidateDocuments) => {
     if (!selectedId || !canEditDocs) throw new ApiError('Sin permiso para actualizar documentos', 403);
     await updateDocs.mutateAsync({ id: selectedId, payload: data });
+    addToast({ type: 'success', message: 'Checklist actualizado' });
   };
 
   const onSubmitProceso = async (data: CandidateProcess) => {
     if (!selectedId || !canEditProceso) throw new ApiError('Sin permiso para actualizar proceso', 403);
     await updateProceso.mutateAsync({ id: selectedId, payload: data });
+    addToast({ type: 'success', message: 'Proceso actualizado' });
   };
 
   const onSubmitContrato = async (data: CandidateAssignment) => {
     if (!selectedId || !canEditContrato) throw new ApiError('Sin permiso para actualizar contrato', 403);
     await updateContrato.mutateAsync({ id: selectedId, payload: data });
+    addToast({ type: 'success', message: 'Contrato actualizado' });
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-white via-white to-gea-blue-deep/10 px-4 py-10 text-gea-midnight">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <header className="flex flex-col gap-2">
-          <p className="text-sm text-gea-slate">Candidatos</p>
-          <h1 className="text-3xl font-semibold text-gea-midnight">Ficha, checklist y proceso</h1>
-          <p className="text-sm text-gea-slate">Selecciona un candidato para ver/editar sus datos.</p>
-        </header>
+    <div className="space-y-6">
+      <SectionHeader
+        title="Candidatos"
+        subtitle="Ficha, checklist y proceso. Selecciona un candidato para ver/editar."
+      />
 
-        <Card className="space-y-3">
-          <SectionHeader title="Listado" actions={listLoading ? <span className="pill">Cargando…</span> : null} />
-          {!canRead && <p className="text-sm text-gea-slate">No tienes permiso para ver candidatos.</p>}
-          {!listLoading && canRead && list.length === 0 && <p className="text-sm text-gea-slate">Sin candidatos.</p>}
-          <div className="grid gap-3 md:grid-cols-2">
-            {canRead &&
-              list.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  className={`rounded-2xl border p-4 text-left shadow-sm transition ${
-                    selectedId === c.id
-                      ? 'border-gea-midnight bg-gea-midnight/5'
-                      : 'border-gea-midnight/10 bg-white/90 hover:border-gea-midnight/30'
-                  }`}
-                  onClick={() => {
-                    setSelectedId(c.id);
-                    setTab('datos');
-                  }}
-                >
-                  <p className="text-xs uppercase text-gea-slate">{c.numero_documento}</p>
-                  <h3 className="text-lg font-semibold text-gea-midnight">{c.nombres_completos}</h3>
-                  <p className="text-sm text-gea-slate">{c.apellido_paterno} {c.apellido_materno}</p>
-                  <p className="text-xs text-gea-slate">Modalidad: {c.modalidad || '—'} · Cond: {c.condicion || '—'}</p>
-                </button>
-              ))}
-          </div>
-        </Card>
-
-        {detailLoading && selectedId && <p className="text-sm text-gea-slate">Cargando detalle…</p>}
-
-        {detail && (
-          <Card className="space-y-4">
-            <SectionHeader
-              title={detail.nombres_completos}
-              subtitle={`${detail.tipo_documento} ${detail.numero_documento}`}
-              actions={<span className="pill">{detail.modalidad || 'sin modalidad'}</span>}
-            />
-
-            <div className="flex flex-wrap gap-2">
-              {(['datos', 'documentos', 'proceso', 'contrato'] as Tab[]).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  className={`pill ${tab === t ? 'bg-gea-midnight text-white' : 'bg-gea-midnight/10 text-gea-midnight'}`}
-                  onClick={() => setTab(t)}
-                >
-                  {t === 'datos' && 'Datos'}
-                  {t === 'documentos' && 'Documentos'}
-                  {t === 'proceso' && 'Proceso'}
-                  {t === 'contrato' && 'Contrato'}
-                </button>
-              ))}
+      <Card className="space-y-3">
+        <SectionHeader title="Listado" actions={listLoading ? <span className="pill">Cargando…</span> : null} />
+        <div className="flex flex-wrap gap-3">
+          <Input
+            placeholder="Buscar por nombre, documento, modalidad..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Buscar candidatos"
+            className="max-w-sm"
+          />
+        </div>
+        {!canRead && <p className="text-sm text-gray-500">No tienes permiso para ver candidatos.</p>}
+        {!listLoading && canRead && filtered.length === 0 && (
+          <p className="text-sm text-gray-500">Sin candidatos.</p>
+        )}
+        <div className="grid gap-3 md:grid-cols-2">
+          {canRead &&
+            paged.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                className={`rounded-2xl border p-4 text-left shadow-theme-sm transition ${
+                  selectedId === c.id
+                    ? 'border-brand-500/50 bg-brand-50 dark:border-brand-500/40 dark:bg-brand-500/10'
+                    : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-800 dark:bg-gray-900'
+                }`}
+                onClick={() => {
+                  setSelectedId(c.id);
+                  setTab('datos');
+                }}
+              >
+                <p className="text-xs uppercase text-gray-500">{c.numero_documento}</p>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{c.nombres_completos}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {c.apellido_paterno} {c.apellido_materno}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Modalidad: {c.modalidad || '—'} · Cond: {c.condicion || '—'}
+                </p>
+              </button>
+            ))}
+        </div>
+        {canRead && filtered.length > pageSize && (
+          <div className="flex items-center justify-between pt-2">
+            <span className="text-xs text-gray-500">
+              Página {page} de {Math.max(1, Math.ceil(filtered.length / pageSize))} · {filtered.length} candidatos
+            </span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="btn-secondary px-3 py-1 text-sm"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+              >
+                Anterior
+              </button>
+              <button
+                type="button"
+                className="btn-secondary px-3 py-1 text-sm"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+              >
+                Siguiente
+              </button>
             </div>
+          </div>
+        )}
+      </Card>
 
-            {tab === 'datos' && (
-              <form className="grid gap-4 md:grid-cols-2" onSubmit={submitDatos(onSubmitDatos)}>
-                <Field label="Tipo de documento">
-                  <Select
-                    {...registerDatos('tipo_documento')}
-                    defaultValue={detail.tipo_documento}
+      {detailLoading && selectedId && <p className="text-sm text-gray-500">Cargando detalle…</p>}
+
+      {detail && (
+        <Card className="space-y-4">
+          <SectionHeader
+            title={detail.nombres_completos}
+            subtitle={`${detail.tipo_documento} ${detail.numero_documento}`}
+            actions={<span className="pill">{detail.modalidad || 'sin modalidad'}</span>}
+          />
+
+          <div className="flex flex-wrap gap-2">
+            {(['datos', 'documentos', 'proceso', 'contrato'] as Tab[]).map((t) => (
+              <button
+                key={t}
+                type="button"
+                className={`pill ${tab === t ? 'bg-brand-600 text-white dark:bg-brand-500' : ''}`}
+                onClick={() => setTab(t)}
+              >
+                {t === 'datos' && 'Datos'}
+                {t === 'documentos' && 'Documentos'}
+                {t === 'proceso' && 'Proceso'}
+                {t === 'contrato' && 'Contrato'}
+              </button>
+            ))}
+          </div>
+
+          {tab === 'datos' && (
+            <form className="grid gap-4 md:grid-cols-2" onSubmit={submitDatos(onSubmitDatos)}>
+              <Field label="Tipo de documento">
+                <Select
+                  {...registerDatos('tipo_documento')}
+                  defaultValue={detail.tipo_documento}
                     disabled={!canEditDatos}
                   >
                     <option value="DNI">DNI</option>
@@ -224,7 +288,7 @@ export function CandidatesPage() {
                   </Field>
                 </div>
                 {datosState.errors.root && (
-                  <p className="text-sm text-red-600 md:col-span-2">{datosState.errors.root.message}</p>
+                  <p className="text-sm text-error-500 md:col-span-2">{datosState.errors.root.message}</p>
                 )}
                 <div className="flex gap-3 md:col-span-2">
                   <button type="submit" className="btn-primary" disabled={datosState.isSubmitting || !canEditDatos}>
@@ -240,14 +304,14 @@ export function CandidatesPage() {
                   </button>
                 </div>
                 {!canEditDatos && (
-                  <p className="text-xs text-gea-slate md:col-span-2">
+                  <p className="text-xs text-gray-500 md:col-span-2">
                     Sin permiso para editar los datos del candidato.
                   </p>
                 )}
               </form>
-            )}
+          )}
 
-            {tab === 'documentos' && (
+          {tab === 'documentos' && (
               <form className="grid gap-4 md:grid-cols-3" onSubmit={submitDocs(onSubmitDocs)}>
                 <Field label="CV entregado">
                   <Select
@@ -328,7 +392,7 @@ export function CandidatesPage() {
                   </Field>
                 </div>
                 {docsState.errors.root && (
-                  <p className="text-sm text-red-600 md:col-span-3">{docsState.errors.root.message}</p>
+                  <p className="text-sm text-error-500 md:col-span-3">{docsState.errors.root.message}</p>
                 )}
                 <div className="flex gap-3 md:col-span-3">
                   <button type="submit" className="btn-primary" disabled={docsState.isSubmitting || !canEditDocs}>
@@ -344,12 +408,12 @@ export function CandidatesPage() {
                   </button>
                 </div>
                 {!canEditDocs && (
-                  <p className="text-xs text-gea-slate md:col-span-3">Sin permiso para actualizar documentos.</p>
+                  <p className="text-xs text-gray-500 md:col-span-3">Sin permiso para actualizar documentos.</p>
                 )}
               </form>
-            )}
+          )}
 
-            {tab === 'proceso' && (
+          {tab === 'proceso' && (
               <form className="grid gap-4 md:grid-cols-2" onSubmit={submitProceso(onSubmitProceso)}>
                 <Field label="Envío DNI">
                   <Input
@@ -459,7 +523,7 @@ export function CandidatesPage() {
                   </Field>
                 </div>
                 {procesoState.errors.root && (
-                  <p className="text-sm text-red-600 md:col-span-2">{procesoState.errors.root.message}</p>
+                  <p className="text-sm text-error-500 md:col-span-2">{procesoState.errors.root.message}</p>
                 )}
                 <div className="flex gap-3 md:col-span-2">
                   <button type="submit" className="btn-primary" disabled={procesoState.isSubmitting || !canEditProceso}>
@@ -475,12 +539,12 @@ export function CandidatesPage() {
                   </button>
                 </div>
                 {!canEditProceso && (
-                  <p className="text-xs text-gea-slate md:col-span-2">Sin permiso para actualizar el proceso.</p>
+                  <p className="text-xs text-gray-500 md:col-span-2">Sin permiso para actualizar el proceso.</p>
                 )}
               </form>
-            )}
+          )}
 
-            {tab === 'contrato' && (
+          {tab === 'contrato' && (
               <form className="grid gap-4 md:grid-cols-2" onSubmit={submitContrato(onSubmitContrato)}>
                 <Field label="Tipo de contratación">
                   <Input
@@ -584,7 +648,7 @@ export function CandidatesPage() {
                   <Input {...registerContrato('estado')} defaultValue={detail.assignment?.estado ?? ''} disabled={!canEditContrato} />
                 </Field>
                 {contratoState.errors.root && (
-                  <p className="text-sm text-red-600 md:col-span-2">{contratoState.errors.root.message}</p>
+                  <p className="text-sm text-error-500 md:col-span-2">{contratoState.errors.root.message}</p>
                 )}
                 <div className="flex gap-3 md:col-span-2">
                   <button type="submit" className="btn-primary" disabled={contratoState.isSubmitting || !canEditContrato}>
@@ -600,13 +664,12 @@ export function CandidatesPage() {
                   </button>
                 </div>
                 {!canEditContrato && (
-                  <p className="text-xs text-gea-slate md:col-span-2">Sin permiso para actualizar contrato.</p>
+                  <p className="text-xs text-gray-500 md:col-span-2">Sin permiso para actualizar contrato.</p>
                 )}
               </form>
-            )}
-          </Card>
-        )}
-      </div>
-    </main>
+          )}
+        </Card>
+      )}
+    </div>
   );
 }

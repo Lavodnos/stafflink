@@ -31,12 +31,21 @@ export function DashboardPage() {
   return (
     <section className="grid gap-4 md:grid-cols-2">
       {cards.map((card) => (
-        <Link key={card.title} to={card.to} className="card hover:shadow-xl hover:shadow-gea-midnight/10">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gea-midnight">{card.title}</h2>
-            <span className="pill bg-gea-midnight/10 text-xs">{card.badge}</span>
+        <Link
+          key={card.title}
+          to={card.to}
+          className="card group hover:shadow-theme-xl transition"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                {card.badge}
+              </p>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{card.title}</h2>
+            </div>
+            <span className="pill text-xs">{card.badge}</span>
           </div>
-          <p className="mt-2 text-sm text-gea-slate">{card.description}</p>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{card.description}</p>
         </Link>
       ))}
     </section>

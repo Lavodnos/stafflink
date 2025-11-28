@@ -21,10 +21,10 @@ type SidebarProps = {
   onClose?: () => void;
 };
 
-export function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
+export function SidebarOld({ mobileOpen = false, onClose }: SidebarProps) {
   return (
     <>
-      <aside className="hidden w-64 shrink-0 flex-col gap-4 border-r border-gray-200 bg-white px-4 py-6 shadow-theme-lg dark:border-gray-800 dark:bg-gray-900 lg:flex">
+      <aside className="hidden w-60 shrink-0 flex-col gap-3 bg-gradient-to-b from-gea-midnight via-gea-blue-deep to-gea-green-petrol/80 px-4 py-6 text-white shadow-2xl lg:flex">
         <Brand />
         <nav className="space-y-1">
           {items.map((item) => (
@@ -34,10 +34,12 @@ export function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
         <SidebarFooter />
       </aside>
 
-      {mobileOpen && <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden" onClick={onClose} />}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden" onClick={onClose} />
+      )}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-64 border-r border-gray-200 bg-white px-4 py-6 shadow-theme-lg transition-transform dark:border-gray-800 dark:bg-gray-900 lg:hidden',
+          'fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-gea-midnight via-gea-blue-deep to-gea-green-petrol/80 px-4 py-6 text-white shadow-2xl transition-transform lg:hidden',
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >
@@ -46,7 +48,7 @@ export function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
           {onClose && (
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 dark:border-gray-800 dark:text-gray-200 dark:hover:bg-gray-800"
+              className="btn-secondary px-3 py-2 text-sm text-gea-midnight"
               onClick={onClose}
               aria-label="Cerrar menú"
             >
@@ -67,13 +69,13 @@ export function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
 function Brand() {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-brand-50 px-3 py-2 dark:border-gray-800 dark:bg-gray-800">
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600 text-base font-extrabold text-white">
-        SL
+    <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 px-3 py-2">
+      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-gea-midnight font-extrabold text-lg">
+        G
       </div>
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Stafflink</p>
-        <p className="text-lg font-semibold text-gray-900 dark:text-white">GEA</p>
+        <p className="text-sm uppercase tracking-wide text-white/80">Stafflink</p>
+        <p className="text-lg font-semibold text-white">GEA</p>
       </div>
     </div>
   );
@@ -88,10 +90,10 @@ function SidebarItem({ item, onSelect }: { item: NavItem; onSelect?: () => void 
       onClick={onSelect}
       className={({ isActive }) =>
         cn(
-          'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition',
+          'flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition',
           isActive
-            ? 'bg-brand-50 text-brand-600 shadow-theme-sm dark:bg-brand-500/10 dark:text-brand-200'
-            : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800',
+            ? 'bg-white text-gea-midnight shadow-lg'
+            : 'text-white/80 hover:bg-white/10 hover:text-white',
         )
       }
     >
@@ -102,8 +104,8 @@ function SidebarItem({ item, onSelect }: { item: NavItem; onSelect?: () => void 
 
 function SidebarFooter() {
   return (
-    <div className="mt-auto rounded-xl border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-300">
-      <p className="font-semibold text-gray-800 dark:text-white">Stafflink</p>
+    <div className="mt-auto rounded-2xl border border-white/10 bg-white/10 p-3 text-xs text-white/80">
+      <p className="font-semibold text-white">Stafflink</p>
       <p>GEA · Backoffice</p>
     </div>
   );

@@ -5,7 +5,7 @@ type CardProps = React.HTMLAttributes<HTMLDivElement>;
 export function Card({ className, ...props }: CardProps) {
   return (
     <div
-      className={cn('card bg-white/90 shadow-sm border border-gea-midnight/10 rounded-2xl', className)}
+      className={cn('card', className)}
       {...props}
     />
   );
@@ -20,8 +20,8 @@ export function SectionHeader({ title, subtitle, actions }: SectionHeaderProps) 
   return (
     <header className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
       <div>
-        <h2 className="text-xl font-semibold text-gea-midnight">{title}</h2>
-        {subtitle && <p className="text-sm text-gea-slate">{subtitle}</p>}
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{title}</h2>
+        {subtitle && <p className="text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>}
       </div>
       {actions && <div className="flex items-center gap-3">{actions}</div>}
     </header>
@@ -36,9 +36,9 @@ type FieldProps = {
 export function Field({ label, hint, children }: FieldProps) {
   return (
     <label className="label flex flex-col gap-1">
-      <span className="font-medium text-gea-midnight">{label}</span>
+      <span className="font-medium text-gray-900 dark:text-white">{label}</span>
       {children}
-      {hint && <span className="text-xs text-gea-slate">{hint}</span>}
+      {hint && <span className="text-xs text-gray-500 dark:text-gray-400">{hint}</span>}
     </label>
   );
 }

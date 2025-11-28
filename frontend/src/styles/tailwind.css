@@ -1,58 +1,218 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans: "Montserrat Variable", "Montserrat", "Futura Std", "Segoe UI", system-ui, -apple-system, sans-serif;
+@custom-variant dark (&:is(.dark *));
 
-  --color-gea-midnight: #0b1658;
-  --color-gea-blue-deep: #00124e;
-  --color-gea-blue: #005fa9;
-  --color-gea-green: #026937;
-  --color-gea-green-light: #7a9a32;
-  --color-gea-green-petrol: #004021;
-  --color-gea-red: #9d162e;
-  --color-gea-orange: #e96f36;
-  --color-gea-orange-dark: #5a1d32;
-  --color-gea-slate: #8785ab;
+@theme {
+  --font-*: initial;
+  --font-outfit: Outfit, "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  --breakpoint-*: initial;
+  --breakpoint-2xsm: 375px;
+  --breakpoint-xsm: 425px;
+  --breakpoint-3xl: 2000px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  --color-current: currentColor;
+  --color-transparent: transparent;
+  --color-white: #ffffff;
+  --color-black: #101828;
+
+  /* Brand palette (TailAdmin-like) */
+  --color-brand-25: #f2f7ff;
+  --color-brand-50: #ecf3ff;
+  --color-brand-100: #dde9ff;
+  --color-brand-200: #c2d6ff;
+  --color-brand-300: #9cb9ff;
+  --color-brand-400: #7592ff;
+  --color-brand-500: #465fff;
+  --color-brand-600: #3641f5;
+  --color-brand-700: #2a31d8;
+  --color-brand-800: #252dae;
+  --color-brand-900: #262e89;
+  --color-brand-950: #161950;
+
+  --color-gray-25: #fcfcfd;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f2f4f7;
+  --color-gray-200: #e4e7ec;
+  --color-gray-300: #d0d5dd;
+  --color-gray-400: #98a2b3;
+  --color-gray-500: #667085;
+  --color-gray-600: #475467;
+  --color-gray-700: #344054;
+  --color-gray-800: #1d2939;
+  --color-gray-900: #101828;
+  --color-gray-950: #0c111d;
+  --color-gray-dark: #1a2231;
+
+  --color-success-500: #12b76a;
+  --color-error-500: #f04438;
+  --color-warning-500: #f79009;
+  --color-info-500: #0ba5ec;
+
+  /* Legacy GEA tokens mapped for compatibility */
+  --color-gea-midnight: #101828;
+  --color-gea-blue-deep: #161950;
+  --color-gea-blue: #465fff;
+  --color-gea-green: #12b76a;
+  --color-gea-green-light: #32d583;
+  --color-gea-green-petrol: #2a31d8;
+  --color-gea-red: #f04438;
+  --color-gea-orange: #fb6514;
+  --color-gea-orange-dark: #7a2e0e;
+  --color-gea-slate: #667085;
   --color-gea-white: #ffffff;
 
-  --color-primary: var(--color-gea-midnight);
-  --color-secondary: var(--color-gea-blue);
-  --color-accent: var(--color-gea-green);
-  --color-accent-strong: var(--color-gea-green-light);
+  --shadow-theme-md:
+    0px 4px 8px -2px rgba(16, 24, 40, 0.1),
+    0px 2px 4px -2px rgba(16, 24, 40, 0.06);
+  --shadow-theme-lg:
+    0px 12px 16px -4px rgba(16, 24, 40, 0.08),
+    0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+  --shadow-theme-xs: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+  --shadow-focus-ring: 0px 0px 0px 4px rgba(70, 95, 255, 0.12);
 }
 
 @plugin "@tailwindcss/forms";
 
-@layer components {
-  .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-gea-green-petrol to-gea-green-light px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-gea-green/25 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60;
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
   }
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+  body {
+    @apply relative z-1 bg-gray-50 font-normal font-outfit text-gray-900 dark:bg-gray-950 dark:text-gray-100;
+  }
+}
 
+@utility menu-item {
+  @apply relative flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition;
+}
+@utility menu-item-active {
+  @apply bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-200;
+}
+@utility menu-item-inactive {
+  @apply text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800;
+}
+@utility menu-item-icon-active {
+  @apply text-brand-500 dark:text-brand-200;
+}
+@utility menu-item-icon-inactive {
+  @apply text-gray-400 dark:text-gray-500;
+}
+@utility menu-dropdown-item {
+  @apply flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition;
+}
+@utility menu-dropdown-item-active {
+  @apply bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-200;
+}
+@utility menu-dropdown-item-inactive {
+  @apply text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800;
+}
+@utility menu-dropdown-badge {
+  @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase;
+}
+@utility menu-dropdown-badge-active {
+  @apply bg-brand-100 text-brand-700 dark:bg-brand-500/10 dark:text-brand-200;
+}
+@utility menu-dropdown-badge-inactive {
+  @apply bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-200;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2
+           disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:ring-brand-300 dark:focus-visible:ring-offset-gray-950;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2
+           disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:ring-brand-300 dark:focus-visible:ring-offset-gray-950
+           bg-brand-600 text-white shadow-theme-md hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-400;
+  }
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border border-gea-midnight bg-white px-5 py-3 text-sm font-semibold text-gea-midnight transition hover:bg-gea-midnight hover:text-white disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2
+           disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:ring-brand-300 dark:focus-visible:ring-offset-gray-950
+           border border-gray-200 bg-white text-gray-700 shadow-theme-xs hover:bg-gray-100
+           dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800;
+  }
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2
+           disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:ring-brand-300 dark:focus-visible:ring-offset-gray-950
+           border border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-100 dark:hover:bg-gray-800;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2
+           disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:ring-brand-300 dark:focus-visible:ring-offset-gray-950
+           bg-error-500 text-white hover:bg-error-500/90;
   }
 
   .card {
-    @apply rounded-3xl border border-white/10 bg-white/80 p-6 shadow-xl backdrop-blur;
+    @apply rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-lg transition dark:border-gray-800 dark:bg-gray-900;
   }
-
-  .card-dark {
-    @apply rounded-3xl border border-white/10 bg-gea-midnight/90 p-6 text-white shadow-xl backdrop-blur;
+  .card-muted {
+    @apply rounded-2xl border border-gray-200 bg-gray-50 p-6 shadow-theme-md transition dark:border-gray-800 dark:bg-gray-900/60;
   }
 
   .input {
-    @apply w-full rounded-xl border border-gea-slate/30 bg-white px-3 py-2 text-sm text-gea-midnight shadow-sm placeholder:text-gea-slate focus:border-gea-midnight focus:outline-none focus:ring-2 focus:ring-gea-midnight/20;
+    @apply block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm
+           placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20
+           dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-brand-700;
+  }
+  .input-error {
+    @apply border-error-500 focus:border-error-500 focus:ring-error-500/30;
   }
 
   .label {
-    @apply mb-1 block text-sm font-medium text-gea-midnight;
+    @apply mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200;
+  }
+  .helper {
+    @apply text-xs text-gray-500 dark:text-gray-400;
+  }
+  .error {
+    @apply text-sm font-medium text-error-500;
   }
 
   .section-title {
-    @apply text-xl font-semibold text-gea-midnight;
+    @apply text-xl font-semibold text-gray-900 dark:text-white;
   }
 
   .pill {
-    @apply inline-flex items-center gap-2 rounded-full bg-gea-midnight/5 px-3 py-1 text-xs font-semibold text-gea-midnight;
+    @apply inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-100;
+  }
+
+  .table {
+    @apply w-full border-separate border-spacing-0 text-sm;
+  }
+  .table-head {
+    @apply bg-gray-50 text-xs font-semibold uppercase text-gray-500 dark:bg-gray-900 dark:text-gray-300;
+  }
+  .table-row {
+    @apply border-b border-gray-200 dark:border-gray-800;
+  }
+  .table-cell {
+    @apply px-4 py-3 text-sm text-gray-800 dark:text-gray-100;
+  }
+
+  .form-section {
+    @apply space-y-4 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900;
+  }
+  .form-group {
+    @apply space-y-1.5;
   }
 }
