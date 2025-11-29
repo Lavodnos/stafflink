@@ -44,13 +44,13 @@ export function UserMenu() {
     <div className="relative" ref={menuRef}>
       <button
         type="button"
-        className="flex items-center gap-2 rounded-full border border-gea-midnight/10 bg-white px-3 py-2 text-sm font-semibold text-gea-midnight shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-gea-midnight/30"
+        className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-800 shadow-theme-xs transition hover:bg-gray-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500/30 dark:border-gray-800 dark:bg-gray-900 dark:text-white"
         onClick={() => setOpen((v) => !v)}
         aria-label="Menú de usuario"
         aria-haspopup="true"
         aria-expanded={open}
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gea-midnight text-white">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-500 text-white shadow-theme-xs">
           {initials || 'U'}
         </span>
         <span className="hidden sm:block">{user?.first_name || user?.email || 'Usuario'}</span>
@@ -58,19 +58,19 @@ export function UserMenu() {
 
       {open && (
         <div
-          className="absolute right-0 mt-2 w-56 rounded-2xl border border-gea-midnight/10 bg-white p-2 shadow-lg"
+          className="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 bg-white p-2 shadow-theme-lg dark:border-gray-800 dark:bg-gray-900"
           role="menu"
           aria-label="Opciones de usuario"
         >
-          <div className="rounded-xl px-3 py-2 text-xs text-gea-slate">
-            <p className="font-semibold text-gea-midnight">{user?.first_name || user?.email || 'Usuario'}</p>
+          <div className="rounded-lg px-3 py-2 text-xs text-gray-500 dark:text-gray-300">
+            <p className="font-semibold text-gray-900 dark:text-white">{user?.first_name || user?.email || 'Usuario'}</p>
             {user?.email && <p className="truncate">{user.email}</p>}
           </div>
           <a
             href={IAM_SECURITY_URL}
             target="_blank"
             rel="noreferrer"
-            className="block rounded-xl px-3 py-2 text-sm font-medium text-gea-midnight hover:bg-gea-midnight/5 focus:outline-none focus:ring-2 focus:ring-gea-midnight/30"
+            className="block rounded-lg px-3 py-2 text-sm font-medium text-gray-800 transition hover:bg-gray-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500/30 dark:text-white dark:hover:bg-gray-800"
             role="menuitem"
           >
             Seguridad / Cambiar contraseña
@@ -78,7 +78,7 @@ export function UserMenu() {
           <button
             type="button"
             className={cn(
-              'mt-1 w-full rounded-xl px-3 py-2 text-left text-sm font-medium text-gea-midnight hover:bg-gea-midnight/5 focus:outline-none focus:ring-2 focus:ring-gea-midnight/30',
+              'mt-1 w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-800 transition hover:bg-gray-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500/30 dark:text-white dark:hover:bg-gray-800',
               loading && 'opacity-60',
             )}
             onClick={handleLogout}

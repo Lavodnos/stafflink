@@ -2,49 +2,21 @@ import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 
+import geaLogo from '../assets/gea-logo.svg';
 import { ApiError } from '../lib/apiError';
 import type { PublicCandidatePayload, PublicLink } from '../modules/public/api';
 import { createPublicCandidate, fetchPublicLink } from '../modules/public/api';
+import {
+  canalOptions,
+  documentOptions,
+  estadoCivilOptions,
+  experienciaCCOptions,
+  experienciaOtraOptions,
+  nivelAcademicoOptions,
+  tiempoExperienciaOptions,
+} from '../modules/public/constants';
 
 type FormData = Omit<PublicCandidatePayload, 'link_slug'>;
-
-const documentOptions = [
-  { value: 'dni', label: 'DNI' },
-  { value: 'ce', label: 'Carné de extranjería' },
-];
-
-const estadoCivilOptions = ['SOLTERO', 'CASADO', 'DIVORCIADO', 'VIUDO', 'CONVIVIENTE'];
-const nivelAcademicoOptions = [
-  'SECUNDARIA COMPLETA',
-  'TÉCNICO CULMINADO',
-  'TÉCNICO EN CURSO',
-  'TÉCNICO TRUNCO',
-  'UNIVERSITARIO CULMINADO',
-  'UNIVERSITARIO EN CURSO',
-  'UNIVERSITARIO TRUNCO',
-  'TITULADO',
-];
-
-const experienciaCCOptions = [
-  'EXPERIENCIA ATC CALL CENTER',
-  'EXPERIENCIA VENTAS CALL CENTER',
-  'EXPERIENCIA  EN RETENCIONES O FIDELIZACION',
-  'EXPERIENCIA EN CONSUMO MASIVO',
-];
-const experienciaOtraOptions = [
-  'SIN EXPERIENCIA LABORAL',
-  'EXPERIENCIA EN ATENCION AL CLIENTE PRESENCIAL',
-  'EXPERIENCIA EN VENTAS PRESENCIAL',
-];
-const tiempoExperienciaOptions = [
-  '0 MESES',
-  '1 - 3 MESES',
-  '3 - 6 MESES',
-  '6 - 9 MESES',
-  '9 - 12 MESES',
-  '12 MESES A MAS',
-];
-const canalOptions = ['COMPUTRABAJO', 'BUMERAN', 'FACEBOOK', 'TIK TOK', 'INSTAGRAM'];
 
 export function PublicApplyPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -123,38 +95,45 @@ export function PublicApplyPage() {
   };
 
   const headerContent = useMemo(() => {
-    if (loading) return <p className="text-gea-slate">Cargando link…</p>;
+    if (loading) return <p className="text-slate-500">Cargando link…</p>;
     if (error) return <p className="text-red-600">{error}</p>;
     if (!link) return null;
     return (
-      <div className="card">
-        <p className="text-sm text-gea-slate">Campaña</p>
-        <h1 className="text-3xl font-semibold text-gea-midnight">{link.titulo}</h1>
-        <div className="mt-3 flex flex-wrap gap-2 text-sm">
-          <span className="pill">{link.campaign}</span>
-          <span className="pill">{link.modalidad}</span>
-          <span className="pill">{link.condicion}</span>
-          {link.hora_gestion && <span className="pill">Horario: {link.hora_gestion}</span>}
-          {link.descanso && <span className="pill">Descanso: {link.descanso}</span>}
+      <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-theme-lg">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-8">
+          <div className="flex-shrink-0">
+            <img src={geaLogo} alt="GEA" className="h-16 w-auto lg:h-20" />
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-slate-500">Campaña</p>
+            <h1 className="text-3xl font-semibold text-slate-900">{link.titulo}</h1>
+            <div className="flex flex-wrap gap-2 text-sm">
+              <span className="pill">{link.campaign}</span>
+              <span className="pill">{link.modalidad}</span>
+              <span className="pill">{link.condicion}</span>
+              {link.hora_gestion && <span className="pill">Horario: {link.hora_gestion}</span>}
+              {link.descanso && <span className="pill">Descanso: {link.descanso}</span>}
+            </div>
+            <p className="text-sm text-slate-500">
+              Link vigente hasta{' '}
+              {new Intl.DateTimeFormat('es-PE', {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+              }).format(new Date(link.expires_at))}
+            </p>
+          </div>
         </div>
-        <p className="mt-2 text-sm text-gea-slate">
-          Link vigente hasta{' '}
-          {new Intl.DateTimeFormat('es-PE', {
-            dateStyle: 'medium',
-            timeStyle: 'short',
-          }).format(new Date(link.expires_at))}
-        </p>
       </div>
     );
   }, [loading, error, link]);
 
   if (submittedId) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-gea-blue-deep via-gea-midnight to-black/90 px-4 py-10 text-white">
+      <main className="min-h-screen bg-gray-50 px-4 py-10 text-gray-900">
         <div className="mx-auto max-w-4xl space-y-6">
-          <div className="card-dark">
+          <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-theme-lg">
             <h1 className="text-3xl font-semibold">¡Gracias por postular!</h1>
-            <p className="mt-2 text-white/80">
+            <p className="mt-2 text-gray-600">
               Tu registro fue recibido con el ID <strong>{submittedId}</strong>. Te contactaremos si necesitamos información adicional.
             </p>
           </div>
@@ -168,20 +147,20 @@ export function PublicApplyPage() {
     );
   }
 
-  return (
-    <main className="min-h-screen bg-gradient-to-b from-white via-white to-gea-blue-deep/10 px-4 py-10 text-gea-midnight">
+    return (
+      <main className="min-h-screen bg-gray-50 px-4 py-10 text-gray-900">
       <div className="mx-auto max-w-5xl space-y-8">
         {headerContent}
         {link && (
-          <form className="card space-y-6" onSubmit={handleSubmit(onSubmit)}>
+          <form className="rounded-2xl border border-gray-200 bg-white p-8 shadow-theme-lg space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <header className="space-y-2">
               <h2 className="section-title">Datos personales</h2>
-              <p className="text-sm text-gea-slate">Completa la información en MAYÚSCULAS donde aplique.</p>
+              <p className="text-sm text-slate-500">Completa la información en MAYÚSCULAS donde aplique.</p>
             </header>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="label">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Tipo de documento
                   <select className="input" {...register('tipo_documento', { required: 'Campo obligatorio' })}>
                     {documentOptions.map((opt) => (
@@ -194,7 +173,7 @@ export function PublicApplyPage() {
                 {errors.tipo_documento && <p className="text-xs text-red-600">{errors.tipo_documento.message}</p>}
               </div>
               <div>
-                <label className="label">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Nro de documento *
                   <input
                     className="input"
@@ -205,7 +184,7 @@ export function PublicApplyPage() {
                 {errors.numero_documento && <p className="text-xs text-red-600">{errors.numero_documento.message}</p>}
               </div>
               <div>
-                <label className="label">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Apellido paterno *
                   <input
                     className="input"
@@ -218,7 +197,7 @@ export function PublicApplyPage() {
                 )}
               </div>
               <div>
-                <label className="label">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Apellido materno *
                   <input
                     className="input"
@@ -231,7 +210,7 @@ export function PublicApplyPage() {
                 )}
               </div>
               <div className="md:col-span-2">
-                <label className="label">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Nombres completos *
                   <input
                     className="input"
@@ -244,14 +223,14 @@ export function PublicApplyPage() {
                 )}
               </div>
               <div>
-                <label className="label">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Celular *
                   <input className="input" {...register('telefono', { required: 'Campo obligatorio' })} />
                 </label>
                 {errors.telefono && <p className="text-xs text-red-600">{errors.telefono.message}</p>}
               </div>
               <div>
-                <label className="label">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Celular de referencia *
                   <input className="input" {...register('telefono_referencia', { required: 'Campo obligatorio' })} />
                 </label>
@@ -260,7 +239,7 @@ export function PublicApplyPage() {
                 )}
               </div>
               <div>
-                <label className="label">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Correo electrónico *
                   <input
                     type="email"
@@ -271,7 +250,7 @@ export function PublicApplyPage() {
                 {errors.email && <p className="text-xs text-red-600">{errors.email.message}</p>}
               </div>
               <div>
-                <label className="label">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Género *
                   <select className="input" {...register('sexo', { required: 'Campo obligatorio' })}>
                     <option value="">Selecciona</option>
@@ -282,7 +261,7 @@ export function PublicApplyPage() {
                 {errors.sexo && <p className="text-xs text-red-600">{errors.sexo.message}</p>}
               </div>
               <div>
-                <label className="label">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Fecha de nacimiento *
                   <input type="date" className="input" {...register('fecha_nacimiento', { required: 'Campo obligatorio' })} />
                 </label>
@@ -291,7 +270,7 @@ export function PublicApplyPage() {
                 )}
               </div>
               <div>
-                <label className="label">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Edad *
                   <input
                     type="number"
@@ -306,7 +285,7 @@ export function PublicApplyPage() {
                 {errors.edad && <p className="text-xs text-red-600">{errors.edad.message as string}</p>}
               </div>
               <div>
-                <label className="label">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Estado civil *
                   <select className="input" {...register('estado_civil', { required: 'Campo obligatorio' })}>
                     <option value="">Selecciona</option>
@@ -320,7 +299,7 @@ export function PublicApplyPage() {
                 {errors.estado_civil && <p className="text-xs text-red-600">{errors.estado_civil.message}</p>}
               </div>
               <div>
-                <label className="label">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   N° de hijos *
                   <input
                     type="number"
@@ -335,7 +314,7 @@ export function PublicApplyPage() {
                 {errors.numero_hijos && <p className="text-xs text-red-600">{errors.numero_hijos.message as string}</p>}
               </div>
               <div>
-                <label className="label">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Nivel académico *
                   <select className="input" {...register('nivel_academico', { required: 'Campo obligatorio' })}>
                     <option value="">Selecciona</option>
@@ -349,21 +328,21 @@ export function PublicApplyPage() {
                 {errors.nivel_academico && <p className="text-xs text-red-600">{errors.nivel_academico.message}</p>}
               </div>
               <div>
-                <label className="label">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Carrera *
                   <input className="input" {...register('carrera', { required: 'Campo obligatorio' })} />
                 </label>
                 {errors.carrera && <p className="text-xs text-red-600">{errors.carrera.message}</p>}
               </div>
               <div>
-                <label className="label">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Nacionalidad *
                   <input className="input" {...register('nacionalidad', { required: 'Campo obligatorio' })} />
                 </label>
                 {errors.nacionalidad && <p className="text-xs text-red-600">{errors.nacionalidad.message}</p>}
               </div>
               <div>
-                <label className="label">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Lugar de residencia *
                   <input className="input" {...register('lugar_residencia', { required: 'Campo obligatorio' })} />
                 </label>
@@ -372,14 +351,14 @@ export function PublicApplyPage() {
                 )}
               </div>
               <div>
-                <label className="label">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Distrito de residencia *
                   <input className="input" {...register('distrito', { required: 'Campo obligatorio' })} />
                 </label>
                 {errors.distrito && <p className="text-xs text-red-600">{errors.distrito.message}</p>}
               </div>
               <div className="md:col-span-2">
-                <label className="label">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Dirección de domicilio *
                   <input className="input" {...register('direccion', { required: 'Campo obligatorio' })} />
                 </label>
@@ -389,14 +368,14 @@ export function PublicApplyPage() {
 
             <div className="space-y-4">
               <h3 className="section-title">Experiencia laboral</h3>
-              <div className="flex items-center gap-3 rounded-2xl bg-gea-midnight/5 px-4 py-3">
+              <div className="flex items-center gap-3 rounded-2xl bg-slate-100 px-4 py-3">
                 <input
                   type="checkbox"
                   className="h-4 w-4"
                   {...register('has_callcenter_experience')}
                   id="has_cc"
                 />
-                <label htmlFor="has_cc" className="text-sm font-medium text-gea-midnight">
+                <label htmlFor="has_cc" className="text-sm font-medium text-slate-800">
                   ¿Cuentas con experiencia en call center?
                 </label>
               </div>
@@ -404,7 +383,7 @@ export function PublicApplyPage() {
               {hasCCExperience ? (
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <label className="label">
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">
                       Tipo de experiencia *
                       <select
                         className="input"
@@ -425,7 +404,7 @@ export function PublicApplyPage() {
                     )}
                   </div>
                   <div>
-                    <label className="label">
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">
                       Tiempo de experiencia *
                       <select
                         className="input"
@@ -449,7 +428,7 @@ export function PublicApplyPage() {
               ) : (
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <label className="label">
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">
                       Otra experiencia laboral *
                       <select
                         className="input"
@@ -470,7 +449,7 @@ export function PublicApplyPage() {
                     )}
                   </div>
                   <div>
-                    <label className="label">
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">
                       Tiempo de experiencia *
                       <select
                         className="input"
@@ -496,7 +475,7 @@ export function PublicApplyPage() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="label">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   ¿Cómo te enteraste de la oferta? *
                   <select className="input" {...register('enteraste_oferta', { required: 'Campo obligatorio' })}>
                     <option value="">Selecciona</option>
@@ -512,7 +491,7 @@ export function PublicApplyPage() {
                 )}
               </div>
               <div>
-                <label className="label">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Observación *
                   <input className="input" {...register('observacion', { required: 'Campo obligatorio' })} />
                 </label>

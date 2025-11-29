@@ -92,8 +92,9 @@ export type CandidateDetail = Candidate & {
   assignment?: CandidateAssignment;
 };
 
-export async function fetchCandidates(): Promise<Candidate[]> {
-  return apiFetch<Candidate[]>('/v1/candidates/');
+export async function fetchCandidates(linkId?: string): Promise<Candidate[]> {
+  const qs = linkId ? `?link_id=${encodeURIComponent(linkId)}` : '';
+  return apiFetch<Candidate[]>(`/v1/candidates/${qs}`);
 }
 
 export async function fetchCandidate(id: string): Promise<CandidateDetail> {

@@ -24,7 +24,7 @@ type SidebarProps = {
 export function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   return (
     <>
-      <aside className="hidden w-60 shrink-0 flex-col gap-3 bg-gradient-to-b from-gea-midnight via-gea-blue-deep to-gea-green-petrol/80 px-4 py-6 text-white shadow-2xl lg:flex">
+      <aside className="hidden h-screen w-64 shrink-0 flex-col gap-4 border-r border-gray-200 bg-white px-4 py-6 text-gray-900 shadow-theme-lg dark:border-[#1f2a3d] dark:bg-[#0f172a] dark:text-[#e8eefc] lg:flex">
         <Brand />
         <nav className="space-y-1">
           {items.map((item) => (
@@ -39,7 +39,7 @@ export function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
       )}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-gea-midnight via-gea-blue-deep to-gea-green-petrol/80 px-4 py-6 text-white shadow-2xl transition-transform lg:hidden',
+          'fixed inset-y-0 left-0 z-50 w-72 border-r border-gray-200 bg-white px-4 py-6 text-gray-900 shadow-theme-lg transition-transform dark:border-[#1f2a3d] dark:bg-[#0f172a] dark:text-[#e8eefc] lg:hidden',
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >
@@ -69,13 +69,13 @@ export function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
 function Brand() {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 px-3 py-2">
-      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-gea-midnight font-extrabold text-lg">
+    <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500 text-white text-lg font-bold shadow-theme-sm">
         G
       </div>
-      <div>
-        <p className="text-sm uppercase tracking-wide text-white/80">Stafflink</p>
-        <p className="text-lg font-semibold text-white">GEA</p>
+      <div className="leading-tight">
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Stafflink</p>
+        <p className="text-lg font-semibold text-gray-900 dark:text-white">GEA</p>
       </div>
     </div>
   );
@@ -90,22 +90,20 @@ function SidebarItem({ item, onSelect }: { item: NavItem; onSelect?: () => void 
       onClick={onSelect}
       className={({ isActive }) =>
         cn(
-          'flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition',
-          isActive
-            ? 'bg-white text-gea-midnight shadow-lg'
-            : 'text-white/80 hover:bg-white/10 hover:text-white',
+          'menu-item',
+          isActive ? 'menu-item-active shadow-theme-sm' : 'menu-item-inactive',
         )
       }
     >
-      <span>{item.label}</span>
+      <span className="menu-item-text">{item.label}</span>
     </NavLink>
   );
 }
 
 function SidebarFooter() {
   return (
-    <div className="mt-auto rounded-2xl border border-white/10 bg-white/10 p-3 text-xs text-white/80">
-      <p className="font-semibold text-white">Stafflink</p>
+    <div className="mt-auto rounded-xl border border-gray-200 bg-gray-50 p-3 text-xs text-gray-500 dark:border-gray-800 dark:bg-gray-800/60 dark:text-gray-300">
+      <p className="font-semibold text-gray-900 dark:text-white">Stafflink</p>
       <p>GEA · Backoffice</p>
     </div>
   );

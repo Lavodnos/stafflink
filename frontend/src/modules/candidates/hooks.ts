@@ -18,10 +18,10 @@ import {
 
 const candidatesKey = ['candidates'];
 
-export function useCandidates(enabled = true) {
+export function useCandidates(enabled = true, linkId?: string) {
   return useQuery({
-    queryKey: candidatesKey,
-    queryFn: fetchCandidates,
+    queryKey: linkId ? [...candidatesKey, { linkId }] : candidatesKey,
+    queryFn: () => fetchCandidates(linkId),
     enabled,
   });
 }

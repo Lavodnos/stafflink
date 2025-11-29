@@ -1,4 +1,6 @@
 import { useForm } from 'react-hook-form';
+import { useCallback, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { Card, Field, Input, SectionHeader, Select, Textarea } from '../components/ui';
 import { ApiError } from '../lib/apiError';
@@ -26,7 +28,11 @@ const initialForm: FormState = {
   estado: 'activo',
 };
 
-export function BlacklistPage() {
+type Mode = 'list' | 'create';
+
+export function BlacklistPage({ mode = 'list' }: { mode?: Mode }) {
+  const navigate = useNavigate();
+  const { id: routeId } = useParams();
   const canRead = usePermission('blacklist.read');
   const canManage = usePermission('blacklist.manage');
 
@@ -48,7 +54,19 @@ export function BlacklistPage() {
 
   const formValues = watch();
   const isEditing = Boolean(formValues.id);
+  const isRouteEditing = Boolean(routeId);
   const saving = isSubmitting || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+  const [search, setSearch] = useState('');
+
+  const filtered = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return items;
+    return items.filter((entry) =>
+      [entry.dni, entry.nombres, entry.estado, entry.descripcion]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(term)),
+    );
+  }, [items, search]);
 
   const onSubmit = async (data: FormState) => {
     if (!canManage) {
@@ -68,14 +86,14 @@ export function BlacklistPage() {
     reset(initialForm);
   };
 
-  const startEdit = (entry: BlacklistEntry) => {
+  const startEdit = useCallback((entry: BlacklistEntry) => {
     if (!canManage) return;
     setValue('id', entry.id);
     setValue('dni', entry.dni);
     setValue('nombres', entry.nombres);
     setValue('descripcion', entry.descripcion ?? '');
     setValue('estado', entry.estado);
-  };
+  }, [canManage, setValue]);
 
   const handleDelete = async (entry: BlacklistEntry) => {
     if (!canManage) return;
@@ -85,27 +103,50 @@ export function BlacklistPage() {
     if (formValues.id === entry.id) reset(initialForm);
   };
 
+  // Si llega por ruta /blacklist/:id/edit, precarga la entrada
+  // y si no existe, redirige al listado
+  useMemo(() => {
+    if (!routeId || !items.length) return undefined;
+    const found = items.find((e) => e.id === routeId);
+    if (found) {
+      startEdit(found);
+      return found;
+    }
+    navigate('/blacklist', { replace: true });
+    return undefined;
+  }, [routeId, items, navigate, startEdit]);
+
   return (
-    <main className="min-h-screen bg-gradient-to-b from-white via-white to-gea-blue-deep/10 px-4 py-10 text-gea-midnight">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <header className="flex flex-col gap-2">
-          <p className="text-sm text-gea-slate">Blacklist</p>
-          <h1 className="text-3xl font-semibold text-gea-midnight">Personas vetadas</h1>
-          <p className="text-sm text-gea-slate">Agrega o edita entradas para bloquear postulantes.</p>
+    <main className="min-h-screen bg-gray-50 px-4 py-8 text-gray-900 dark:bg-gray-900 dark:text-white">
+      <div className="mx-auto max-w-(--breakpoint-2xl) space-y-6">
+        <header className="flex flex-col gap-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Blacklist</p>
+          <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">
+            {mode === 'create' || isRouteEditing || isEditing ? 'Crear o editar entrada' : 'Personas vetadas'}
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {mode === 'create' || isRouteEditing || isEditing
+              ? 'Registra o actualiza un DNI en la blacklist.'
+              : 'Agrega o edita entradas para bloquear postulantes.'}
+          </p>
         </header>
 
-        <Card className="space-y-4">
-          <SectionHeader
-            title={`${isEditing ? 'Editar' : 'Nueva'} entrada`}
-            subtitle="DNI en mayúsculas."
-            actions={
-              isEditing && canManage && (
-                <button type="button" className="btn-secondary" onClick={() => reset(initialForm)}>
-                  Cancelar edición
-                </button>
-              )
-            }
-          />
+        {(mode === 'create' || isRouteEditing || isEditing) && (
+          <Card className="space-y-4">
+            <SectionHeader
+              title={isEditing || isRouteEditing ? 'Editar entrada' : 'Nueva entrada'}
+              subtitle="DNI en mayúsculas."
+              actions={
+                (isEditing || isRouteEditing) && canManage && (
+                  <button type="button" className="btn-secondary" onClick={() => {
+                    reset(initialForm);
+                    if (isRouteEditing) navigate('/blacklist');
+                  }}>
+                    Cancelar edición
+                  </button>
+                )
+              }
+            />
           <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit(onSubmit)}>
             <Field label="DNI*">
               <Input
@@ -162,7 +203,7 @@ export function BlacklistPage() {
             )}
             <div className="flex gap-3 md:col-span-2">
               <button type="submit" className="btn-primary" disabled={saving || !canManage}>
-                {saving ? 'Guardando…' : isEditing ? 'Actualizar' : 'Crear'}
+                {saving ? 'Guardando…' : (isEditing || isRouteEditing) ? 'Actualizar' : 'Crear'}
               </button>
               <button
                 type="button"
@@ -174,46 +215,106 @@ export function BlacklistPage() {
               </button>
             </div>
           </form>
-          {!canManage && <p className="text-xs text-gea-slate">No tienes permiso para crear o editar entradas.</p>}
+          {!canManage && <p className="text-xs text-gray-500 dark:text-gray-400">No tienes permiso para crear o editar entradas.</p>}
         </Card>
+        )}
 
+        {mode === 'list' && (
         <Card className="space-y-3">
-          <SectionHeader title="Listado" actions={isLoading ? <span className="pill">Cargando…</span> : null} />
-          {!canRead && <p className="text-sm text-gea-slate">No tienes permiso para ver la blacklist.</p>}
-          {!isLoading && canRead && items.length === 0 && <p className="text-sm text-gea-slate">Sin registros.</p>}
-          <div className="grid gap-3 md:grid-cols-2">
-            {canRead &&
-              items.map((entry) => (
-                <article key={entry.id} className="rounded-2xl border border-gea-midnight/10 bg-white/90 p-4 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs uppercase text-gea-slate">{entry.dni}</p>
-                      <h3 className="text-lg font-semibold text-gea-midnight">{entry.nombres}</h3>
-                    </div>
-                    <div className="flex gap-2">
-                      {canManage && (
-                        <button type="button" className="pill bg-gea-midnight/10" onClick={() => startEdit(entry)}>
-                          Editar
-                        </button>
-                      )}
-                      {canManage && (
-                        <button
-                          type="button"
-                          className="pill bg-red-100 text-red-700"
-                          onClick={() => handleDelete(entry)}
-                          disabled={deleteMutation.isPending}
-                        >
-                          Eliminar
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <p className="text-sm text-gea-slate">Estado: {entry.estado}</p>
-                  {entry.descripcion && <p className="text-sm text-gea-slate">{entry.descripcion}</p>}
-                </article>
-              ))}
-          </div>
+          <SectionHeader
+            title="Listado"
+            actions={(
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="btn-secondary px-3 py-2 text-sm"
+                  aria-label="Exportar blacklist"
+                  onClick={() => {
+                    // TODO: export real
+                  }}
+                >
+                  Exportar
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary px-4 py-2 text-sm"
+                  disabled={!canManage}
+                  onClick={() => navigate('/blacklist/new')}
+                >
+                  + Nueva entrada
+                </button>
+              </div>
+            )}
+          />
+          {!canRead && <p className="text-sm text-gray-500 dark:text-gray-400">No tienes permiso para ver la blacklist.</p>}
+          {!isLoading && canRead && filtered.length === 0 && <p className="text-sm text-gray-500 dark:text-gray-400">Sin registros.</p>}
+
+          {mode === 'list' && canRead && (
+            <>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <label className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                  Mostrar
+                  <select className="input w-20" disabled>
+                    <option>10</option>
+                  </select>
+                  entradas
+                </label>
+                <div className="relative">
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Buscar..."
+                    className="input w-56 pl-9"
+                    aria-label="Buscar en blacklist"
+                  />
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                </div>
+              </div>
+
+              <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800">
+                <table className="min-w-full text-left text-sm text-gray-700 dark:text-gray-200">
+                  <thead className="bg-gray-50 text-xs font-semibold uppercase text-gray-500 dark:bg-gray-800 dark:text-gray-300">
+                    <tr>
+                      <th className="px-4 py-3">DNI</th>
+                      <th className="px-4 py-3">Nombres</th>
+                      <th className="px-4 py-3">Estado</th>
+                      <th className="px-4 py-3">Descripción</th>
+                      {canManage && <th className="px-4 py-3 text-right">Acciones</th>}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                    {filtered.map((entry) => (
+                      <tr key={entry.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/80">
+                        <td className="px-4 py-3 text-xs uppercase text-gray-500 dark:text-gray-400">{entry.dni}</td>
+                        <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">{entry.nombres}</td>
+                        <td className="px-4 py-3">
+                          <span className="pill">{entry.estado}</span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{entry.descripcion || '—'}</td>
+                        {canManage && (
+                          <td className="px-4 py-3 text-right space-x-2">
+                            <button type="button" className="btn-secondary px-3 py-1 text-sm" onClick={() => startEdit(entry)}>
+                              Editar
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-secondary px-3 py-1 text-sm"
+                              onClick={() => handleDelete(entry)}
+                              disabled={deleteMutation.isPending}
+                            >
+                              Eliminar
+                            </button>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </Card>
+        )}
       </div>
     </main>
   );

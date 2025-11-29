@@ -1,5 +1,7 @@
 import type { SubmitHandler } from "react-hook-form";
 import { useForm } from "react-hook-form";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 import {
   Card,
@@ -12,7 +14,7 @@ import {
 import { ApiError } from "../lib/apiError";
 import { usePermission } from "../modules/auth/usePermission";
 import { useCampaigns } from "../modules/campaigns/hooks";
-import type { Link, LinkPayload } from "../modules/links/api";
+import type { LinkPayload } from "../modules/links/api";
 import {
   useCreateLink,
   useLinkStatus,
@@ -22,11 +24,16 @@ import {
 
 type LinkForm = LinkPayload & { id?: string };
 
-export function LinksPage() {
+type Mode = 'list' | 'create';
+
+export function LinksPage({ mode = 'list' }: { mode?: Mode }) {
+  const navigate = useNavigate();
+  const { id: routeId } = useParams();
   const canReadLinks = usePermission("links.read");
   const canManageLinks = usePermission("links.manage");
   const canCloseLinks = usePermission("links.close");
   const canReadCampaigns = usePermission("campaigns.read");
+  const canReadCandidates = usePermission("candidates.read");
 
   const { data: items = [], isLoading, error } = useLinks(canReadLinks);
   const { data: campaigns = [] } = useCampaigns(canReadCampaigns);
@@ -61,6 +68,7 @@ export function LinksPage() {
 
   const values = watch();
   const isEditing = Boolean(values.id);
+  const isRouteEditing = Boolean(routeId);
   const saving =
     isSubmitting ||
     createMutation.isPending ||
@@ -97,24 +105,6 @@ export function LinksPage() {
     reset();
   };
 
-  const startEdit = (link: Link) => {
-    if (!canManageLinks) return;
-    setValue("id", link.id);
-    setValue("campaign", link.campaign);
-    setValue("grupo", link.grupo ?? "");
-    setValue("titulo", link.titulo);
-    setValue("slug", link.slug);
-    setValue("periodo", link.periodo ?? "");
-    setValue("semana_trabajo", link.semana_trabajo ?? undefined);
-    setValue("cuotas", link.cuotas ?? undefined);
-    setValue("modalidad", link.modalidad);
-    setValue("condicion", link.condicion);
-    setValue("hora_gestion", link.hora_gestion ?? "");
-    setValue("descanso", link.descanso ?? "");
-    setValue("expires_at", toLocalDateTimeInput(link.expires_at));
-    setValue("notes", link.notes ?? "");
-  };
-
   const changeStatus = async (
     linkId: string,
     action: "expire" | "revoke" | "activate",
@@ -137,40 +127,87 @@ export function LinksPage() {
     )}:${pad(date.getMinutes())}`;
   };
 
+  const setFromLink = useCallback(
+    (link: LinkPayload & { id: string; expires_at?: string | null }) => {
+      setValue("id", link.id);
+      setValue("campaign", link.campaign ?? "");
+      setValue("grupo", link.grupo ?? "");
+      setValue("titulo", link.titulo ?? "");
+      setValue("slug", link.slug ?? "");
+      setValue("periodo", link.periodo ?? "");
+      setValue("semana_trabajo", normalizeNumberValue(link.semana_trabajo));
+      setValue("cuotas", normalizeNumberValue(link.cuotas));
+      setValue("modalidad", link.modalidad ?? "presencial");
+      setValue("condicion", link.condicion ?? "full_time");
+      setValue("hora_gestion", link.hora_gestion ?? "");
+      setValue("descanso", link.descanso ?? "");
+      setValue("expires_at", toLocalDateTimeInput(link.expires_at));
+      setValue("notes", link.notes ?? "");
+    },
+    [setValue],
+  );
+
+  useEffect(() => {
+    if (!routeId || !items.length) return;
+    const found = items.find((l) => l.id === routeId);
+    if (found) {
+      setFromLink(found);
+    } else {
+      navigate("/links", { replace: true });
+    }
+  }, [routeId, items, setFromLink, navigate]);
+
+  const [search, setSearch] = useState("");
+  const filtered = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return items;
+    return items.filter((link) =>
+      [link.titulo, link.slug, link.modalidad, link.condicion, link.campaign]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(term)),
+    );
+  }, [items, search]);
+
   return (
-    <main className="to-gea-blue-deep/10 text-gea-midnight min-h-screen bg-gradient-to-b from-white via-white px-4 py-10">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <header className="flex flex-col gap-2">
-          <p className="text-gea-slate text-sm">Links</p>
-          <h1 className="text-gea-midnight text-3xl font-semibold">
-            Genera links de reclutamiento
+    <main className="min-h-screen bg-gray-50 px-4 py-8 text-gray-900 dark:bg-gray-900 dark:text-white">
+      <div className="mx-auto max-w-(--breakpoint-2xl) space-y-6">
+        <header className="flex flex-col gap-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Links</p>
+          <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">
+            {mode === 'create' || isRouteEditing || isEditing ? 'Crear o editar link' : 'Genera links de reclutamiento'}
           </h1>
-          <p className="text-gea-slate text-sm">
-            Asigna campaña, parámetros por defecto y comparte el slug público.
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {mode === 'create' || isRouteEditing || isEditing
+              ? 'Define campaña, slug y expiración para un link.'
+              : 'Asigna campaña, parámetros por defecto y comparte el slug público.'}
           </p>
         </header>
 
-        <Card className="space-y-4">
-          <SectionHeader
-            title={isEditing ? "Editar link" : "Nuevo link"}
+        {(mode === 'create' || isRouteEditing) && (
+          <Card className="space-y-4">
+            <SectionHeader
+            title={isRouteEditing || isEditing ? "Editar link" : "Nuevo link"}
             subtitle="Define campaña, slug y expiración."
             actions={
-              isEditing &&
+              (isRouteEditing || isEditing) &&
               canManageLinks && (
                 <button
                   type="button"
-                  className="btn-secondary"
-                  onClick={() => reset()}
-                >
-                  Cancelar edición
-                </button>
-              )
-            }
-          />
-          <form
-            className="grid gap-4 md:grid-cols-2"
-            onSubmit={handleSubmit(onSubmit)}
-          >
+                    className="btn-secondary"
+                    onClick={() => {
+                      reset();
+                      if (isRouteEditing) navigate("/links");
+                    }}
+                  >
+                    Cancelar edición
+                  </button>
+                )
+              }
+            />
+            <form
+              className="grid gap-4 md:grid-cols-2"
+              onSubmit={handleSubmit(onSubmit)}
+            >
             <Field label="Campaña*">
               <Select
                 {...register("campaign", {
@@ -372,7 +409,7 @@ export function LinksPage() {
               >
                 {saving
                   ? "Guardando…"
-                  : isEditing
+                  : (isEditing || isRouteEditing)
                     ? "Actualizar"
                     : "Crear link"}
               </button>
@@ -387,109 +424,178 @@ export function LinksPage() {
             </div>
           </form>
           {!canManageLinks && (
-            <p className="text-gea-slate text-xs">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               No tienes permiso para crear o editar links.
             </p>
           )}
         </Card>
+        )}
 
-        <Card className="space-y-3">
+        {mode === 'list' && (
+          <Card className="space-y-3">
           <SectionHeader
             title="Listado"
-            actions={isLoading ? <span className="pill">Cargando…</span> : null}
+            actions={(
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="btn-secondary px-3 py-2 text-sm"
+                  aria-label="Exportar links"
+                  onClick={() => {
+                    // TODO: integrar export real
+                  }}
+                >
+                  Exportar
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary px-4 py-2 text-sm"
+                  disabled={!canManageLinks}
+                  onClick={() => navigate('/links/new')}
+                >
+                  + Crear link
+                </button>
+              </div>
+            )}
           />
           {!canReadLinks && (
-            <p className="text-gea-slate text-sm">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               No tienes permiso para ver links.
             </p>
           )}
           {!isLoading && canReadLinks && items.length === 0 && (
-            <p className="text-gea-slate text-sm">Sin links.</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Sin links.</p>
           )}
-          <div className="grid gap-3 md:grid-cols-2">
-            {canReadLinks &&
-              items.map((link) => (
-                <article
-                  key={link.id}
-                  className="border-gea-midnight/10 rounded-2xl border bg-white/90 p-4 shadow-sm"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gea-slate text-xs uppercase">
-                        {link.slug}
-                      </p>
-                      <h3 className="text-gea-midnight text-lg font-semibold">
-                        {link.titulo}
-                      </h3>
-                    </div>
-                    <div className="flex flex-col gap-1 text-right">
-                      <span className="pill bg-gea-midnight/10 text-xs">
-                        {link.estado}
-                      </span>
-                      <span className="text-gea-slate text-[11px]">
-                        Campaña: {link.campaign}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-gea-slate text-sm">
-                    Mod: {link.modalidad} · Cond: {link.condicion} · Hr:{" "}
-                    {link.hora_gestion || "—"}
-                  </p>
-                  <p className="text-gea-slate text-xs">
-                    Vence:{" "}
-                    {new Intl.DateTimeFormat("es-PE", {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    }).format(new Date(link.expires_at))}
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {canManageLinks && (
-                      <button
-                        type="button"
-                        className="pill bg-gea-midnight/10"
-                        onClick={() => startEdit(link)}
-                      >
-                        Editar
-                      </button>
-                    )}
-                    {canCloseLinks && (
-                      <button
-                        type="button"
-                        className="pill bg-orange-100 text-orange-700"
-                        onClick={() => changeStatus(link.id, "expire")}
-                        disabled={statusMutation.isPending}
-                      >
-                        Expirar
-                      </button>
-                    )}
-                    {canCloseLinks && (
-                      <button
-                        type="button"
-                        className="pill bg-red-100 text-red-700"
-                        onClick={() => changeStatus(link.id, "revoke")}
-                        disabled={statusMutation.isPending}
-                      >
-                        Revocar
-                      </button>
-                    )}
-                    {canCloseLinks && (
-                      <button
-                        type="button"
-                        className="pill bg-green-100 text-green-700"
-                        onClick={() => changeStatus(link.id, "activate")}
-                        disabled={statusMutation.isPending}
-                      >
-                        Activar
-                      </button>
-                    )}
-                  </div>
-                  <p className="text-gea-slate mt-2 text-[11px] break-all">
-                    URL pública: /apply/{link.slug}
-                  </p>
-                </article>
-              ))}
-          </div>
-        </Card>
+          {canReadLinks && (
+            <>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <label className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                  Mostrar
+                  <select className="input w-20" disabled>
+                    <option>10</option>
+                  </select>
+                  entradas
+                </label>
+                <div className="relative">
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Buscar..."
+                    className="input w-56 pl-9"
+                    aria-label="Buscar links"
+                  />
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    🔍
+                  </span>
+                </div>
+              </div>
+              <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800">
+                <table className="min-w-full text-left text-sm text-gray-700 dark:text-gray-200">
+                  <thead className="bg-gray-50 text-xs font-semibold uppercase text-gray-500 dark:bg-gray-800 dark:text-gray-300">
+                    <tr>
+                      <th className="px-4 py-3">Slug</th>
+                      <th className="px-4 py-3">Título</th>
+                      <th className="px-4 py-3">Campaña</th>
+                      <th className="px-4 py-3">Modalidad</th>
+                      <th className="px-4 py-3">Condición</th>
+                      <th className="px-4 py-3">Expira</th>
+                      <th className="px-4 py-3">Estado</th>
+                      <th className="px-4 py-3 text-right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                    {filtered.map((link) => (
+                      <tr key={link.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/80">
+                        <td className="px-4 py-3 text-xs uppercase text-gray-500 dark:text-gray-400">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono">{link.slug}</span>
+                            <button
+                              type="button"
+                              className="text-[11px] font-semibold text-brand-600 hover:underline dark:text-brand-400"
+                              onClick={() => {
+                                const url = `${window.location.origin}/apply/${link.slug}`;
+                                navigator.clipboard?.writeText(url);
+                              }}
+                            >
+                              Copiar link
+                            </button>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">{link.titulo}</td>
+                        <td className="px-4 py-3">{link.campaign}</td>
+                        <td className="px-4 py-3">{link.modalidad}</td>
+                        <td className="px-4 py-3">{link.condicion}</td>
+                        <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">
+                          {new Intl.DateTimeFormat("es-PE", {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          }).format(new Date(link.expires_at))}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="pill">{link.estado}</span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex flex-wrap justify-end gap-2 text-xs">
+                            <button
+                              type="button"
+                              className="btn-secondary px-3 py-1.5"
+                              disabled={!canReadCandidates}
+                              onClick={() =>
+                                navigate(
+                                  `/links/${link.id}/candidates?link_id=${link.id}&link_slug=${encodeURIComponent(
+                                    link.slug,
+                                  )}&link_title=${encodeURIComponent(link.titulo ?? '')}`,
+                                )
+                              }
+                            >
+                              Ver candidatos
+                            </button>
+                            {canManageLinks && (
+                              <>
+                                <button
+                                  type="button"
+                                  className="btn-primary px-3 py-1.5"
+                                  onClick={() => navigate(`/links/${link.id}/edit`)}
+                                >
+                                  Editar
+                                </button>
+                                {canCloseLinks && (
+                                  <>
+                                    {link.estado === 'activo' && (
+                                      <button
+                                        type="button"
+                                        className="px-3 py-1.5 rounded-full border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-500/40 dark:text-red-300 dark:hover:bg-red-900/20"
+                                        onClick={() => changeStatus(link.id, "expire")}
+                                        disabled={statusMutation.isPending}
+                                      >
+                                        Expirar
+                                      </button>
+                                    )}
+                                    {link.estado !== 'activo' && (
+                                      <button
+                                        type="button"
+                                        className="px-3 py-1.5 rounded-full border border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500/40 dark:text-emerald-200 dark:hover:bg-emerald-900/20"
+                                        onClick={() => changeStatus(link.id, "activate")}
+                                        disabled={statusMutation.isPending}
+                                      >
+                                        Activar
+                                      </button>
+                                    )}
+                                  </>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+          </Card>
+        )}
       </div>
     </main>
   );
