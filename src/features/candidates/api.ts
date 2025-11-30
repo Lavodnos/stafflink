@@ -1,4 +1,4 @@
-import { apiFetch } from '../../lib/http';
+import { apiFetch } from '@/lib/http';
 
 export type Candidate = {
   id: string;
@@ -128,3 +128,4 @@ export async function updateCandidateAssignment(id: string, payload: CandidateAs
     body: JSON.stringify(payload),
   });
 }
+

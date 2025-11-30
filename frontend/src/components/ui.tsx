@@ -43,6 +43,12 @@ export function Field({ label, hint, children }: FieldProps) {
   );
 }
 
+type ErrorTextProps = { message?: string };
+export function ErrorText({ message }: ErrorTextProps) {
+  if (!message) return null;
+  return <span className="text-xs text-red-600">{message}</span>;
+}
+
 type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
 export const Input = forwardRef<HTMLInputElement, InputProps>(function InputBase({ className, ...props }, ref) {
   return <input ref={ref} className={cn('input', className)} {...props} />;

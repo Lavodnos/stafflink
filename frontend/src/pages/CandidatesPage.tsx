@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import {
@@ -10,6 +12,7 @@ import {
   SectionHeader,
   Select,
   Textarea,
+  ErrorText,
 } from "../components/ui";
 import { ApiError } from "../lib/apiError";
 import { usePermission } from "../modules/auth/usePermission";
@@ -18,7 +21,7 @@ import type {
   CandidateAssignment,
   CandidateDocuments,
   CandidateProcess,
-} from "../modules/candidates/api";
+} from "@/features/candidates";
 import {
   useCandidate,
   useCandidates,
@@ -26,12 +29,90 @@ import {
   useUpdateCandidate,
   useUpdateDocuments,
   useUpdateProcess,
-} from "../modules/candidates/hooks";
+} from "@/features/candidates";
 
 type Tab = "datos" | "documentos" | "proceso" | "contrato";
 
 type Mode = "list" | "create";
 
+const datosSchema = z.object({
+  nombres_completos: z.string().trim().min(1, "Requerido"),
+  numero_documento: z.string().trim().min(4, "Requerido"),
+  tipo_documento: z.string().trim().min(1, "Requerido"),
+  email: z.string().trim().email("Email inválido"),
+  telefono: z.string().trim().min(5, "Teléfono requerido"),
+  sexo: z.string().optional(),
+  fecha_nacimiento: z.string().optional(),
+  edad: z.coerce.number().optional().nullable(),
+  estado_civil: z.string().optional(),
+  numero_hijos: z.coerce.number().optional().nullable(),
+  nivel_academico: z.string().optional(),
+  carrera: z.string().optional(),
+  nacionalidad: z.string().optional(),
+  lugar_residencia: z.string().optional(),
+  distrito: z.string().optional(),
+  direccion: z.string().optional(),
+  has_callcenter_experience: z.boolean().optional().nullable(),
+  callcenter_experience_type: z.string().optional(),
+  callcenter_experience_time: z.string().optional(),
+  other_experience_type: z.string().optional(),
+  other_experience_time: z.string().optional(),
+  enteraste_oferta: z.string().optional(),
+  observacion: z.string().optional(),
+  modalidad: z.string().optional(),
+  condicion: z.string().optional(),
+  hora_gestion: z.string().optional(),
+  descanso: z.string().optional(),
+});
+
+const docsSchema = z.object({
+  cv_entregado: z.boolean().optional(),
+  dni_entregado: z.boolean().optional(),
+  certificado_entregado: z.boolean().optional(),
+  recibo_servicio_entregado: z.boolean().optional(),
+  ficha_datos_entregado: z.boolean().optional(),
+  autorizacion_datos_entregado: z.boolean().optional(),
+  status: z.string().optional().nullable(),
+  observacion: z.string().optional().nullable(),
+});
+
+const procesoSchema = z.object({
+  envio_dni_at: z.string().optional().nullable(),
+  test_psicologico_at: z.string().optional().nullable(),
+  validacion_pc_at: z.string().optional().nullable(),
+  evaluacion_dia0_at: z.string().optional().nullable(),
+  inicio_capacitacion_at: z.string().optional().nullable(),
+  fin_capacitacion_at: z.string().optional().nullable(),
+  conexion_ojt_at: z.string().optional().nullable(),
+  conexion_op_at: z.string().optional().nullable(),
+  pago_capacitacion_at: z.string().optional().nullable(),
+  estado_dia0: z.string().optional().nullable(),
+  observaciones_dia0: z.string().optional().nullable(),
+  estado_dia1: z.string().optional().nullable(),
+  observaciones_dia1: z.string().optional().nullable(),
+  windows_status: z.string().optional().nullable(),
+  asistencia_extra: z.record(z.string(), z.string()).optional().nullable(),
+  status_final: z.string().optional().nullable(),
+  status_observacion: z.string().optional().nullable(),
+  updated_by: z.string().optional().nullable(),
+  updated_at: z.string().optional().nullable(),
+});
+
+const contratoSchema = z.object({
+  tipo_contratacion: z.string().optional().nullable(),
+  razon_social: z.string().optional().nullable(),
+  remuneracion: z.coerce.number().optional().nullable(),
+  bono_variable: z.coerce.number().optional().nullable(),
+  bono_movilidad: z.coerce.number().optional().nullable(),
+  bono_bienvenida: z.coerce.number().optional().nullable(),
+  bono_permanencia: z.coerce.number().optional().nullable(),
+  bono_asistencia: z.coerce.number().optional().nullable(),
+  cargo_contractual: z.string().optional().nullable(),
+  regimen_pago: z.string().optional().nullable(),
+  fecha_inicio: z.string().optional().nullable(),
+  fecha_fin: z.string().optional().nullable(),
+  estado: z.string().optional().nullable(),
+});
 export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
   const navigate = useNavigate();
   const canRead = usePermission("candidates.read");
@@ -66,25 +147,35 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
     setValue: setDatos,
   } = useForm<Candidate>({
     defaultValues: {},
+    resolver: zodResolver(datosSchema),
   });
   const {
     register: registerDocs,
     handleSubmit: submitDocs,
     reset: resetDocs,
     formState: docsState,
-  } = useForm<CandidateDocuments>();
+  } = useForm<CandidateDocuments>({
+    defaultValues: {},
+    resolver: zodResolver(docsSchema),
+  });
   const {
     register: registerProceso,
     handleSubmit: submitProceso,
     reset: resetProceso,
     formState: procesoState,
-  } = useForm<CandidateProcess>();
+  } = useForm<CandidateProcess>({
+    defaultValues: {},
+    resolver: zodResolver(procesoSchema),
+  });
   const {
     register: registerContrato,
     handleSubmit: submitContrato,
     reset: resetContrato,
     formState: contratoState,
-  } = useForm<CandidateAssignment>();
+  } = useForm<CandidateAssignment>({
+    defaultValues: {},
+    resolver: zodResolver(contratoSchema),
+  });
 
   useEffect(() => {
     if (detail) {
@@ -426,6 +517,7 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
                               disabled={!canEditDatos}
                               defaultValue={detail.numero_documento}
                             />
+                            <ErrorText message={datosState.errors.numero_documento?.message} />
                           </Field>
                           <Field label="Apellidos y nombres">
                             <Input
@@ -433,6 +525,7 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
                               defaultValue={detail.nombres_completos}
                               disabled={!canEditDatos}
                             />
+                            <ErrorText message={datosState.errors.nombres_completos?.message} />
                           </Field>
                           <Field label="Correo">
                             <Input
@@ -440,6 +533,7 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
                               defaultValue={detail.email}
                               disabled={!canEditDatos}
                             />
+                            <ErrorText message={datosState.errors.email?.message} />
                           </Field>
                           <Field label="Teléfono">
                             <Input
@@ -447,6 +541,7 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
                               defaultValue={detail.telefono}
                               disabled={!canEditDatos}
                             />
+                            <ErrorText message={datosState.errors.telefono?.message} />
                           </Field>
                           <Field label="Teléfono referencia">
                             <Input
@@ -640,6 +735,7 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
                                 disabled={!canEditDocs}
                               />
                             </Field>
+                            <ErrorText message={docsState.errors.observacion?.message} />
                           </div>
                           {docsState.errors.root && (
                             <p className="text-sm text-red-600 md:col-span-3">
@@ -693,6 +789,7 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
                               }
                               disabled={!canEditProceso}
                             />
+                            <ErrorText message={procesoState.errors.test_psicologico_at?.message as string | undefined} />
                           </Field>
                           <Field label="Validación PC">
                             <Input
@@ -703,6 +800,7 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
                               }
                               disabled={!canEditProceso}
                             />
+                            <ErrorText message={procesoState.errors.validacion_pc_at?.message as string | undefined} />
                           </Field>
                           <Field label="Evaluación día 0">
                             <Input
@@ -713,6 +811,7 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
                               }
                               disabled={!canEditProceso}
                             />
+                            <ErrorText message={procesoState.errors.evaluacion_dia0_at?.message as string | undefined} />
                           </Field>
                           <Field label="Inicio capacitación">
                             <Input
@@ -723,6 +822,7 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
                               }
                               disabled={!canEditProceso}
                             />
+                            <ErrorText message={procesoState.errors.inicio_capacitacion_at?.message as string | undefined} />
                           </Field>
                           <Field label="Fin capacitación">
                             <Input
@@ -733,6 +833,7 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
                               }
                               disabled={!canEditProceso}
                             />
+                            <ErrorText message={procesoState.errors.fin_capacitacion_at?.message as string | undefined} />
                           </Field>
                           <Field label="Conexión OJT">
                             <Input
@@ -743,6 +844,7 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
                               }
                               disabled={!canEditProceso}
                             />
+                            <ErrorText message={procesoState.errors.conexion_ojt_at?.message as string | undefined} />
                           </Field>
                           <Field label="Conexión OP">
                             <Input
@@ -753,6 +855,7 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
                               }
                               disabled={!canEditProceso}
                             />
+                            <ErrorText message={procesoState.errors.conexion_op_at?.message as string | undefined} />
                           </Field>
                           <Field label="Pago capacitación">
                             <Input
@@ -763,6 +866,7 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
                               }
                               disabled={!canEditProceso}
                             />
+                            <ErrorText message={procesoState.errors.pago_capacitacion_at?.message as string | undefined} />
                           </Field>
                           <Field label="Estado día 0">
                             <Input
@@ -779,6 +883,11 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
                               }
                               disabled={!canEditProceso}
                             />
+                            <ErrorText
+                              message={
+                                procesoState.errors.observaciones_dia0?.message as string | undefined
+                              }
+                            />
                           </Field>
                           <Field label="Estado día 1">
                             <Input
@@ -787,22 +896,23 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
                               disabled={!canEditProceso}
                             />
                           </Field>
-                          <Field label="Obs día 1">
-                            <Textarea
-                              {...registerProceso("observaciones_dia1")}
-                              defaultValue={
-                                detail.process?.observaciones_dia1 ?? ""
-                              }
-                              disabled={!canEditProceso}
-                            />
-                          </Field>
-                          <Field label="Windows status">
-                            <Input
-                              {...registerProceso("windows_status")}
-                              defaultValue={
-                                detail.process?.windows_status ?? ""
-                              }
-                              disabled={!canEditProceso}
+                         <Field label="Obs día 1">
+                           <Textarea
+                             {...registerProceso("observaciones_dia1")}
+                             defaultValue={
+                               detail.process?.observaciones_dia1 ?? ""
+                             }
+                             disabled={!canEditProceso}
+                           />
+                            <ErrorText message={procesoState.errors.observaciones_dia1?.message as string | undefined} />
+                         </Field>
+                         <Field label="Windows status">
+                           <Input
+                             {...registerProceso("windows_status")}
+                             defaultValue={
+                               detail.process?.windows_status ?? ""
+                             }
+                             disabled={!canEditProceso}
                             />
                           </Field>
                           <Field label="Estado final">
@@ -822,6 +932,7 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
                                 disabled={!canEditProceso}
                               />
                             </Field>
+                            <ErrorText message={procesoState.errors.status_observacion?.message} />
                           </div>
                           {procesoState.errors.root && (
                             <p className="text-sm text-red-600 md:col-span-2">
@@ -999,6 +1110,9 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
                               disabled={!canEditContrato}
                             />
                           </Field>
+                          <div className="md:col-span-2">
+                            <ErrorText message={contratoState.errors.estado?.message as string | undefined} />
+                          </div>
                           {contratoState.errors.root && (
                             <p className="text-sm text-red-600 md:col-span-2">
                               {contratoState.errors.root.message}

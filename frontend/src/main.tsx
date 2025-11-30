@@ -7,13 +7,16 @@ import './styles/tailwind.css';
 import App from './App.tsx';
 import { AuthProvider } from './modules/auth/provider';
 import { queryClient } from './lib/queryClient';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <App />
+          <ErrorBoundary>
+            <App />
+          </ErrorBoundary>
         </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>

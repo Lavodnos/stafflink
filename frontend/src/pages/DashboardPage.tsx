@@ -2,10 +2,10 @@ import { useMemo, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Chart from 'react-apexcharts';
 import type { ApexOptions } from 'apexcharts';
-import { useCampaigns } from '../modules/campaigns/hooks';
-import { useLinks } from '../modules/links/hooks';
-import { useCandidates } from '../modules/candidates/hooks';
-import { useBlacklist } from '../modules/blacklist/hooks';
+import { useLinks } from '@/features/links';
+import { useCampaigns } from '@/features/campaigns';
+import { useCandidates } from '@/features/candidates';
+import { useBlacklist } from '@/features/blacklist';
 import { usePermission } from '../modules/auth/usePermission';
 
 export function DashboardPage() {

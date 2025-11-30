@@ -1,4 +1,4 @@
-import { apiFetch } from '../../lib/http';
+import { apiClient } from '@/lib/apiClient';
 
 export type BlacklistEntry = {
   id: string;
@@ -11,13 +11,13 @@ export type BlacklistEntry = {
 };
 
 export async function fetchBlacklist(): Promise<BlacklistEntry[]> {
-  return apiFetch<BlacklistEntry[]>('/v1/blacklist/');
+  return apiClient<BlacklistEntry[]>('/v1/blacklist/');
 }
 
 export async function createBlacklistEntry(
   payload: Omit<BlacklistEntry, 'id' | 'created_at' | 'updated_at'>,
 ): Promise<BlacklistEntry> {
-  return apiFetch<BlacklistEntry>('/v1/blacklist/', {
+  return apiClient<BlacklistEntry>('/v1/blacklist/', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
@@ -27,12 +27,12 @@ export async function updateBlacklistEntry(
   id: string,
   payload: Partial<BlacklistEntry>,
 ): Promise<BlacklistEntry> {
-  return apiFetch<BlacklistEntry>(`/v1/blacklist/${id}/`, {
+  return apiClient<BlacklistEntry>(`/v1/blacklist/${id}/`, {
     method: 'PATCH',
     body: JSON.stringify(payload),
   });
 }
 
 export async function deleteBlacklistEntry(id: string): Promise<void> {
-  await apiFetch(`/v1/blacklist/${id}/`, { method: 'DELETE', skipJson: true });
+  await apiClient(`/v1/blacklist/${id}/`, { method: 'DELETE', skipJson: true });
 }

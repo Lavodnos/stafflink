@@ -1,17 +1,19 @@
 import { useForm } from 'react-hook-form';
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
-import { Card, Field, Input, SectionHeader, Select, Textarea } from '../components/ui';
+import { Card, Field, Input, SectionHeader, Select, Textarea, ErrorText } from '../components/ui';
 import { ApiError } from '../lib/apiError';
 import { usePermission } from '../modules/auth/usePermission';
-import type { BlacklistEntry } from '../modules/blacklist/api';
+import type { BlacklistEntry } from '@/features/blacklist';
 import {
   useBlacklist,
   useCreateBlacklist,
   useDeleteBlacklist,
   useUpdateBlacklist,
-} from '../modules/blacklist/hooks';
+} from '@/features/blacklist';
 
 type FormState = {
   id?: string;
@@ -20,6 +22,18 @@ type FormState = {
   descripcion?: string;
   estado: string;
 };
+
+const schema = z.object({
+  id: z.string().optional(),
+  dni: z
+    .string()
+    .trim()
+    .min(4, 'Mínimo 4 caracteres')
+    .max(20, 'Máximo 20 caracteres'),
+  nombres: z.string().trim().min(3, 'Mínimo 3 caracteres'),
+  descripcion: z.string().trim().min(5, 'Mínimo 5 caracteres'),
+  estado: z.enum(['activo', 'inactivo']),
+});
 
 const initialForm: FormState = {
   dni: '',
@@ -50,6 +64,7 @@ export function BlacklistPage({ mode = 'list' }: { mode?: Mode }) {
     formState: { errors, isSubmitting },
   } = useForm<FormState>({
     defaultValues: initialForm,
+    resolver: zodResolver(schema),
   });
 
   const formValues = watch();
@@ -151,38 +166,25 @@ export function BlacklistPage({ mode = 'list' }: { mode?: Mode }) {
             <Field label="DNI*">
               <Input
                 disabled={!canManage}
-                {...register('dni', {
-                  required: 'Requerido',
-                  minLength: { value: 4, message: 'Mínimo 4 caracteres' },
-                  onChange: (e) => setValue('dni', e.target.value.toUpperCase(), { shouldValidate: true }),
-                })}
+                {...register('dni')}
                 value={formValues.dni}
+                onChange={(e) => setValue('dni', e.target.value.toUpperCase(), { shouldValidate: true })}
               />
-              {errors.dni && <span className="text-xs text-red-600">{errors.dni.message}</span>}
+              <ErrorText message={errors.dni?.message} />
             </Field>
             <Field label="Nombres*">
               <Input
                 disabled={!canManage}
-                {...register('nombres', {
-                  required: 'Requerido',
-                  minLength: { value: 3, message: 'Mínimo 3 caracteres' },
-                  onChange: (e) => setValue('nombres', e.target.value.toUpperCase(), { shouldValidate: true }),
-                })}
+                {...register('nombres')}
                 value={formValues.nombres}
+                onChange={(e) => setValue('nombres', e.target.value.toUpperCase(), { shouldValidate: true })}
               />
-              {errors.nombres && <span className="text-xs text-red-600">{errors.nombres.message}</span>}
+              <ErrorText message={errors.nombres?.message} />
             </Field>
             <div className="md:col-span-2">
               <Field label="Descripción*">
-                <Textarea
-                  {...register('descripcion', {
-                    required: 'Requerido',
-                    minLength: { value: 5, message: 'Mínimo 5 caracteres' },
-                  })}
-                  value={formValues.descripcion}
-                  disabled={!canManage}
-                />
-                {errors.descripcion && <span className="text-xs text-red-600">{errors.descripcion.message}</span>}
+                <Textarea {...register('descripcion')} value={formValues.descripcion} disabled={!canManage} />
+                <ErrorText message={errors.descripcion?.message} />
               </Field>
             </div>
             <Field label="Estado">

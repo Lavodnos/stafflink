@@ -1,4 +1,4 @@
-import { apiFetch } from '../../lib/http';
+import { apiClient } from '@/lib/apiClient';
 
 export type Campaign = {
   id: string;
@@ -12,18 +12,18 @@ export type Campaign = {
 };
 
 export async function fetchCampaigns(): Promise<Campaign[]> {
-  return apiFetch<Campaign[]>('/v1/campaigns/');
+  return apiClient<Campaign[]>('/v1/campaigns/');
 }
 
 export async function createCampaign(payload: Omit<Campaign, 'id' | 'created_at' | 'updated_at'>) {
-  return apiFetch<Campaign>('/v1/campaigns/', {
+  return apiClient<Campaign>('/v1/campaigns/', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
 }
 
 export async function updateCampaign(id: string, payload: Partial<Campaign>) {
-  return apiFetch<Campaign>(`/v1/campaigns/${id}/`, {
+  return apiClient<Campaign>(`/v1/campaigns/${id}/`, {
     method: 'PATCH',
     body: JSON.stringify(payload),
   });

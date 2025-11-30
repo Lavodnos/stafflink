@@ -1,21 +1,21 @@
 import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { Card, Field, Input, SectionHeader, Select } from "../components/ui";
+import { Card, Field, Input, SectionHeader, Select, ErrorText } from "../components/ui";
 import { ApiError } from "../lib/apiError";
 import { usePermission } from "../modules/auth/usePermission";
-import type { Campaign } from "../modules/campaigns/api";
+import type { Campaign } from "@/features/campaigns";
 import {
   AREA_OPTIONS,
   CAMPAIGN_CODE_ENABLED,
   SEDE_OPTIONS,
-} from "../modules/campaigns/constants";
-import {
   useCampaigns,
   useCreateCampaign,
   useUpdateCampaign,
-} from "../modules/campaigns/hooks";
+} from "@/features/campaigns";
 
 type FormState = {
   id?: string;
@@ -25,6 +25,15 @@ type FormState = {
   sede?: string;
   estado: string;
 };
+
+const campaignSchema = z.object({
+  id: z.string().optional(),
+  codigo: z.string().trim().optional(),
+  area: z.string().trim().min(1, "Área requerida"),
+  nombre: z.string().trim().min(1, "Nombre requerido"),
+  sede: z.string().trim().min(1, "Sede requerida"),
+  estado: z.enum(["activa", "inactiva"]),
+});
 
 type Mode = 'list' | 'create';
 
@@ -46,6 +55,7 @@ export function CampaignsPage({ mode = 'list' }: { mode?: Mode }) {
     watch,
     formState: { errors, isSubmitting },
   } = useForm<FormState>({
+    resolver: zodResolver(campaignSchema),
     defaultValues: {
       codigo: "",
       area: "",
@@ -146,7 +156,7 @@ export function CampaignsPage({ mode = 'list' }: { mode?: Mode }) {
           </p>
         </header>
 
-        {(mode === "create" || isRouteEditing || isEditing) && (
+        {canRead && (mode === "create" || isRouteEditing || isEditing) && (
           <Card className="space-y-4">
             <SectionHeader
               title={isEditing || isRouteEditing ? "Editar campaña" : "Nueva campaña"}
@@ -175,21 +185,13 @@ export function CampaignsPage({ mode = 'list' }: { mode?: Mode }) {
                 <Field label="Código*">
                   <Input
                     disabled={!canManage}
-                    {...register("codigo", {
-                      required: "Requerido",
-                      minLength: { value: 2, message: "Mínimo 2 caracteres" },
-                      onChange: (e) =>
-                        setValue("codigo", e.target.value.toUpperCase(), {
-                          shouldValidate: true,
-                        }),
-                    })}
+                    {...register("codigo")}
                     value={formValues.codigo}
+                    onChange={(e) =>
+                      setValue("codigo", e.target.value.toUpperCase(), { shouldValidate: true })
+                    }
                   />
-                  {errors.codigo && (
-                    <span className="text-xs text-red-600">
-                      {errors.codigo.message}
-                    </span>
-                  )}
+                  <ErrorText message={errors.codigo?.message} />
                 </Field>
               )}
               <div className="md:col-span-2">
@@ -211,11 +213,7 @@ export function CampaignsPage({ mode = 'list' }: { mode?: Mode }) {
                       </option>
                     ))}
                   </Select>
-                  {errors.area && (
-                    <span className="text-xs text-red-600">
-                      {errors.area.message}
-                    </span>
-                  )}
+                  <ErrorText message={errors.area?.message} />
                 </Field>
               </div>
               <div className="md:col-span-2">
@@ -228,11 +226,7 @@ export function CampaignsPage({ mode = 'list' }: { mode?: Mode }) {
                     value={formValues.nombre}
                     disabled={!canManage}
                   />
-                  {errors.nombre && (
-                    <span className="text-xs text-red-600">
-                      {errors.nombre.message}
-                    </span>
-                  )}
+                  <ErrorText message={errors.nombre?.message} />
                 </Field>
               </div>
               <Field label="Sede*">
@@ -253,11 +247,7 @@ export function CampaignsPage({ mode = 'list' }: { mode?: Mode }) {
                     </option>
                   ))}
                 </Select>
-                {errors.sede && (
-                  <span className="text-xs text-red-600">
-                    {errors.sede.message}
-                  </span>
-                )}
+                <ErrorText message={errors.sede?.message} />
               </Field>
               <Field label="Estado">
                 <Select

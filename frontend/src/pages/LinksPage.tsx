@@ -1,5 +1,7 @@
 import type { SubmitHandler } from "react-hook-form";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -10,19 +12,43 @@ import {
   SectionHeader,
   Select,
   Textarea,
+  ErrorText,
 } from "../components/ui";
-import { ApiError } from "../lib/apiError";
+import { ApiError } from "@/lib/apiError";
 import { usePermission } from "../modules/auth/usePermission";
-import { useCampaigns } from "../modules/campaigns/hooks";
-import type { LinkPayload } from "../modules/links/api";
+import { useCampaigns } from "@/features/campaigns";
+import type { LinkPayload } from "@/features/links";
 import {
   useCreateLink,
   useLinkStatus,
   useLinks,
   useUpdateLink,
-} from "../modules/links/hooks";
+} from "@/features/links";
 
 type LinkForm = LinkPayload & { id?: string };
+
+const linkSchema = z.object({
+  id: z.string().optional(),
+  campaign: z.string().trim().min(1, "Campaña requerida"),
+  titulo: z.string().trim().min(1, "Título requerido"),
+  slug: z.string().trim().min(1, "Slug requerido"),
+  modalidad: z.string().optional(),
+  condicion: z.string().optional(),
+  grupo: z.string().optional(),
+  periodo: z.string().optional(),
+  hora_gestion: z.string().optional(),
+  descanso: z.string().optional(),
+  notes: z.string().optional(),
+  expires_at: z.string().optional(),
+  semana_trabajo: z.preprocess(
+    (v) => (v === '' || v === null || v === undefined ? undefined : v),
+    z.coerce.number().optional()
+  ),
+  cuotas: z.preprocess(
+    (v) => (v === '' || v === null || v === undefined ? undefined : v),
+    z.coerce.number().optional()
+  ),
+});
 
 type Mode = 'list' | 'create';
 
@@ -49,6 +75,7 @@ export function LinksPage({ mode = 'list' }: { mode?: Mode }) {
     watch,
     formState: { errors, isSubmitting },
   } = useForm<LinkForm>({
+    resolver: zodResolver(linkSchema),
     defaultValues: {
       campaign: "",
       grupo: "",
@@ -210,9 +237,7 @@ export function LinksPage({ mode = 'list' }: { mode?: Mode }) {
             >
             <Field label="Campaña*">
               <Select
-                {...register("campaign", {
-                  required: "Selecciona una campaña",
-                })}
+                {...register("campaign")}
                 value={values.campaign}
                 disabled={!canManageLinks}
               >
@@ -223,11 +248,7 @@ export function LinksPage({ mode = 'list' }: { mode?: Mode }) {
                   </option>
                 ))}
               </Select>
-              {errors.campaign && (
-                <span className="text-xs text-red-600">
-                  {errors.campaign.message}
-                </span>
-              )}
+              <ErrorText message={errors.campaign?.message} />
             </Field>
             <Field label="Grupo">
               <Input
@@ -243,37 +264,19 @@ export function LinksPage({ mode = 'list' }: { mode?: Mode }) {
             </Field>
             <Field label="Título*">
               <Input
-                {...register("titulo", {
-                  required: "Requerido",
-                  minLength: { value: 3, message: "Mínimo 3 caracteres" },
-                })}
+                {...register("titulo")}
                 value={values.titulo}
                 disabled={!canManageLinks}
               />
-              {errors.titulo && (
-                <span className="text-xs text-red-600">
-                  {errors.titulo.message}
-                </span>
-              )}
+              <ErrorText message={errors.titulo?.message} />
             </Field>
             <Field label="Slug público*">
               <Input
-                {...register("slug", {
-                  required: "Requerido",
-                  minLength: { value: 3, message: "Mínimo 3 caracteres" },
-                  pattern: {
-                    value: /^[a-z0-9-]+$/,
-                    message: "Sólo minúsculas, números y guiones",
-                  },
-                })}
+                {...register("slug")}
                 value={values.slug}
                 disabled={!canManageLinks}
               />
-              {errors.slug && (
-                <span className="text-xs text-red-600">
-                  {errors.slug.message}
-                </span>
-              )}
+              <ErrorText message={errors.slug?.message} />
             </Field>
             <Field label="Periodo">
               <Input
@@ -292,43 +295,22 @@ export function LinksPage({ mode = 'list' }: { mode?: Mode }) {
                 type="number"
                 {...register("semana_trabajo", {
                   valueAsNumber: true,
-                  validate: {
-                    isNumber: (v) =>
-                      v == null || Number.isFinite(v) || "Ingresa un número",
-                    range: (v) =>
-                      v == null ||
-                      (v >= 1 && v <= 53) ||
-                      "Debe estar entre 1 y 53",
-                  },
                 })}
                 disabled={!canManageLinks}
                 value={normalizeNumberValue(values.semana_trabajo)}
               />
-              {errors.semana_trabajo && (
-                <span className="text-xs text-red-600">
-                  {errors.semana_trabajo.message as string}
-                </span>
-              )}
+              <ErrorText message={errors.semana_trabajo?.message as string | undefined} />
             </Field>
             <Field label="Cuotas">
               <Input
                 type="number"
                 {...register("cuotas", {
                   valueAsNumber: true,
-                  validate: {
-                    isNumber: (v) =>
-                      v == null || Number.isFinite(v) || "Ingresa un número",
-                    positive: (v) => v == null || v > 0 || "Debe ser mayor a 0",
-                  },
                 })}
                 value={normalizeNumberValue(values.cuotas)}
                 disabled={!canManageLinks}
               />
-              {errors.cuotas && (
-                <span className="text-xs text-red-600">
-                  {errors.cuotas.message as string}
-                </span>
-              )}
+              <ErrorText message={errors.cuotas?.message as string | undefined} />
             </Field>
             <Field label="Modalidad">
               <Select
@@ -369,15 +351,11 @@ export function LinksPage({ mode = 'list' }: { mode?: Mode }) {
             <Field label="Expira el*">
               <Input
                 type="datetime-local"
-                {...register("expires_at", { required: "Requerido" })}
+                {...register("expires_at")}
                 disabled={!canManageLinks}
                 value={values.expires_at}
               />
-              {errors.expires_at && (
-                <span className="text-xs text-red-600">
-                  {errors.expires_at.message}
-                </span>
-              )}
+              <ErrorText message={errors.expires_at?.message} />
             </Field>
             <div className="md:col-span-2">
               <Field label="Notas">
@@ -431,42 +409,40 @@ export function LinksPage({ mode = 'list' }: { mode?: Mode }) {
         </Card>
         )}
 
-        {mode === 'list' && (
+        {mode === 'list' && canReadLinks && (
           <Card className="space-y-3">
           <SectionHeader
             title="Listado"
             actions={(
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  className="btn-secondary px-3 py-2 text-sm"
-                  aria-label="Exportar links"
-                  onClick={() => {
-                    // TODO: integrar export real
-                  }}
-                >
-                  Exportar
-                </button>
-                <button
-                  type="button"
-                  className="btn-primary px-4 py-2 text-sm"
-                  disabled={!canManageLinks}
-                  onClick={() => navigate('/links/new')}
-                >
-                  + Crear link
-                </button>
+                {canManageLinks && (
+                  <button
+                    type="button"
+                    className="btn-secondary px-3 py-2 text-sm"
+                    aria-label="Exportar links"
+                    onClick={() => {
+                      // TODO: integrar export real
+                    }}
+                  >
+                    Exportar
+                  </button>
+                )}
+                {canManageLinks && (
+                  <button
+                    type="button"
+                    className="btn-primary px-4 py-2 text-sm"
+                    onClick={() => navigate('/links/new')}
+                  >
+                    + Crear link
+                  </button>
+                )}
               </div>
             )}
           />
-          {!canReadLinks && (
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              No tienes permiso para ver links.
-            </p>
-          )}
-          {!isLoading && canReadLinks && items.length === 0 && (
+          {!isLoading && items.length === 0 && (
             <p className="text-sm text-gray-500 dark:text-gray-400">Sin links.</p>
           )}
-          {canReadLinks && (
+          {(
             <>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <label className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">

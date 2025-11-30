@@ -1,7 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type { BlacklistEntry } from './api';
-import { createBlacklistEntry, deleteBlacklistEntry, fetchBlacklist, updateBlacklistEntry } from './api';
+import {
+  createBlacklistEntry,
+  deleteBlacklistEntry,
+  fetchBlacklist,
+  updateBlacklistEntry,
+} from './api';
 
 const blacklistKey = ['blacklist'];
 
@@ -45,3 +50,4 @@ export function useDeleteBlacklist() {
     },
   });
 }
+
