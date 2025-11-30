@@ -1,0 +1,10 @@
++  "scripts": {
++    "lint": "eslint . --max-warnings=0",
++    "test": "vitest",
++    "check:deps": "depcheck",
++    "check:exports": "ts-prune"
++  },
++  "devDependencies": {
++    "depcheck": "^1.4.3",
++    "ts-prune": "^0.11.6"
++  }

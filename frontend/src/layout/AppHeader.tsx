@@ -29,26 +29,49 @@ const AppHeader: React.FC = () => {
       <div className="flex flex-col items-center justify-between gap-3 px-4 py-3 lg:flex-row lg:px-6">
         <div className="flex w-full items-center gap-3 lg:w-auto">
           <button
-            className="flex h-11 w-11 items-center justify-center rounded-lg border border-gray-200 text-gray-500 shadow-theme-xs transition hover:bg-gray-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500/30 dark:border-gray-800 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="shadow-theme-xs focus-visible:ring-brand-500/30 flex h-11 w-11 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition hover:bg-gray-100 focus-visible:ring-2 focus-visible:outline-hidden dark:border-gray-800 dark:text-gray-300 dark:hover:bg-gray-800"
             onClick={handleToggle}
             aria-label="Toggle sidebar"
           >
-            {isMobileOpen ? "✕" : (
-              <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M1 1H15M1 6H15M1 11H15" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            {isMobileOpen ? (
+              "✕"
+            ) : (
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M1 1H15M1 6H15M1 11H15"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
               </svg>
             )}
           </button>
           <Link to="/" className="lg:hidden">
             <div className="flex items-center gap-2">
-              <div className="h-9 w-9 rounded-lg bg-brand-500 text-white flex items-center justify-center font-bold">T</div>
-              <span className="text-lg font-semibold text-gray-900 dark:text-white">TailAdmin</span>
+              <div className="bg-brand-500 flex h-9 w-9 items-center justify-center rounded-lg font-bold text-white">
+                T
+              </div>
+              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                StaffLink
+              </span>
             </div>
           </Link>
           <div className="hidden lg:block">
             <div className="relative">
-              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-gray-500">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
                   <path
                     fillRule="evenodd"
                     clipRule="evenodd"
@@ -61,7 +84,7 @@ const AppHeader: React.FC = () => {
                 ref={inputRef}
                 type="text"
                 placeholder="Search or type command..."
-                className="h-11 w-[320px] rounded-lg border border-gray-200 bg-white py-2.5 pl-12 pr-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-700"
+                className="shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-700 h-11 w-[320px] rounded-lg border border-gray-200 bg-white py-2.5 pr-4 pl-12 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
               />
             </div>
           </div>

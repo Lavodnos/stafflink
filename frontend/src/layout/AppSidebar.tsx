@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import geaLogo from "../assets/gea-logo.svg";
 import {
   GridIcon,
   ListIcon,
@@ -35,19 +36,23 @@ const AppSidebar: React.FC = () => {
       <aside
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className={`fixed inset-y-0 left-0 z-[9999] flex h-screen flex-col border-r border-gray-200 bg-white px-4 py-5 text-gray-900 shadow-theme-lg transition-all duration-300 dark:border-gray-800 dark:bg-gray-900 ${
+        className={`shadow-theme-lg fixed inset-y-0 left-0 z-[9999] flex h-screen flex-col border-r border-gray-200 bg-white px-4 py-5 text-gray-900 transition-all duration-300 dark:border-gray-800 dark:bg-gray-900 ${
           isExpanded ? "w-72" : "w-[86px]"
         } ${isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
         <div className="mb-6 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-500 text-lg font-bold text-white shadow-theme-sm">
-              T
+            <div className="shadow-theme-sm flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-white p-1.5 dark:bg-gray-800">
+              <img
+                src={geaLogo}
+                alt="GEA"
+                className="h-full w-full object-contain transition duration-200 dark:invert"
+              />
             </div>
             {isExpanded && (
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  TailAdmin
+                  StaffLink
                 </p>
                 <p className="text-lg font-semibold text-gray-900 dark:text-white">
                   Dashboard
@@ -65,7 +70,9 @@ const AppSidebar: React.FC = () => {
               className={({ isActive }) =>
                 [
                   "menu-item",
-                  isActive ? "menu-item-active shadow-theme-sm" : "menu-item-inactive",
+                  isActive
+                    ? "menu-item-active shadow-theme-sm"
+                    : "menu-item-inactive",
                   !isExpanded ? "justify-center" : "",
                 ]
                   .filter(Boolean)
@@ -79,7 +86,7 @@ const AppSidebar: React.FC = () => {
                 <span className="menu-item-text">
                   {item.name}
                   {item.badge && (
-                    <span className="ml-2 rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-semibold text-brand-500">
+                    <span className="bg-brand-50 text-brand-500 ml-2 rounded-full px-2 py-0.5 text-[10px] font-semibold">
                       {item.badge}
                     </span>
                   )}
@@ -89,9 +96,15 @@ const AppSidebar: React.FC = () => {
           ))}
         </nav>
 
-        <div className={`mt-6 rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-500 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800/60 dark:text-gray-300 ${isExpanded ? "" : "text-center"}`}>
+        <div
+          className={`shadow-theme-sm mt-6 rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-500 dark:border-gray-800 dark:bg-gray-800/60 dark:text-gray-300 ${isExpanded ? "" : "text-center"}`}
+        >
           <p className="font-semibold text-gray-900 dark:text-white">Soporte</p>
-          {isExpanded ? <p>help@stafflink</p> : <HorizontaLDots className="mx-auto" />}
+          {isExpanded ? (
+            <p>help@stafflink</p>
+          ) : (
+            <HorizontaLDots className="mx-auto" />
+          )}
         </div>
       </aside>
     </>
