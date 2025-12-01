@@ -15,6 +15,7 @@ import {
   ErrorText,
 } from "../components/ui";
 import { ApiError } from "../lib/apiError";
+import { applyApiFieldErrors } from "../lib/applyApiFieldErrors";
 import { usePermission } from "../modules/auth/usePermission";
 import type {
   Candidate,
@@ -158,6 +159,7 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
     formState: datosState,
     setValue: setDatos,
     watch: watchDatos,
+    setError: setErrorDatos,
   } = useForm<Candidate>({
     defaultValues: {},
     resolver: zodResolver(datosSchema),
@@ -167,6 +169,7 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
     handleSubmit: submitDocs,
     reset: resetDocs,
     formState: docsState,
+    setError: setErrorDocs,
   } = useForm<CandidateDocuments>({
     defaultValues: {},
     resolver: zodResolver(docsSchema),
@@ -176,6 +179,7 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
     handleSubmit: submitProceso,
     reset: resetProceso,
     formState: procesoState,
+    setError: setErrorProceso,
   } = useForm<CandidateProcess>({
     defaultValues: {},
     resolver: zodResolver(procesoSchema),
@@ -185,6 +189,7 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
     handleSubmit: submitContrato,
     reset: resetContrato,
     formState: contratoState,
+    setError: setErrorContrato,
   } = useForm<CandidateAssignment>({
     defaultValues: {},
     resolver: zodResolver(contratoSchema),
@@ -220,6 +225,22 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
       console.log("[Candidates] showDetail ON, selectedId:", selectedId);
     }
   }, [showDetail, selectedId]);
+
+  useEffect(() => {
+    applyApiFieldErrors(updateCandidate.error, setErrorDatos);
+  }, [updateCandidate.error, setErrorDatos]);
+
+  useEffect(() => {
+    applyApiFieldErrors(updateDocs.error, setErrorDocs);
+  }, [updateDocs.error, setErrorDocs]);
+
+  useEffect(() => {
+    applyApiFieldErrors(updateProceso.error, setErrorProceso);
+  }, [updateProceso.error, setErrorProceso]);
+
+  useEffect(() => {
+    applyApiFieldErrors(updateContrato.error, setErrorContrato);
+  }, [updateContrato.error, setErrorContrato]);
 
   const onSubmitDatos = async (data: Candidate) => {
     if (!selectedId || !canEditDatos)

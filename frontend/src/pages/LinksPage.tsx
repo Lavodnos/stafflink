@@ -15,6 +15,7 @@ import {
   ErrorText,
 } from "../components/ui";
 import { ApiError } from "@/lib/apiError";
+import { applyApiFieldErrors } from "@/lib/applyApiFieldErrors";
 import { usePermission } from "../modules/auth/usePermission";
 import { useCampaigns } from "@/features/campaigns";
 import type { LinkPayload } from "@/features/links";
@@ -73,6 +74,7 @@ export function LinksPage({ mode = 'list' }: { mode?: Mode }) {
     reset,
     setValue,
     watch,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<LinkForm>({
     resolver: zodResolver(linkSchema),
@@ -183,6 +185,14 @@ export function LinksPage({ mode = 'list' }: { mode?: Mode }) {
       navigate("/links", { replace: true });
     }
   }, [routeId, items, setFromLink, navigate]);
+
+  useEffect(() => {
+    applyApiFieldErrors(createMutation.error, setError);
+  }, [createMutation.error, setError]);
+
+  useEffect(() => {
+    applyApiFieldErrors(updateMutation.error, setError);
+  }, [updateMutation.error, setError]);
 
   const [search, setSearch] = useState("");
   const filtered = useMemo(() => {

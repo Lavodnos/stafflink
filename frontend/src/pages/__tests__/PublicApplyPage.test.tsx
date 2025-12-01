@@ -83,7 +83,7 @@ describe('PublicApplyPage', () => {
 
     await waitFor(() => {
       expect(createSpy).toHaveBeenCalled();
-      const payload = (createSpy as any).mock.calls[0][0];
+      const payload = (createSpy as unknown as vi.Mock).mock.calls[0][0];
       expect(payload.distrito).toBe('MI DISTRITO'); // se guarda lo escrito en OTRO
     });
   });

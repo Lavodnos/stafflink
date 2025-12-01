@@ -6,6 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { Card, Field, Input, SectionHeader, Select, ErrorText } from "../components/ui";
 import { ApiError } from "../lib/apiError";
+import { applyApiFieldErrors } from "../lib/applyApiFieldErrors";
 import { usePermission } from "../modules/auth/usePermission";
 import type { Campaign } from "@/features/campaigns";
 import {
@@ -53,6 +54,7 @@ export function CampaignsPage({ mode = 'list' }: { mode?: Mode }) {
     reset,
     setValue,
     watch,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<FormState>({
     resolver: zodResolver(campaignSchema),
@@ -105,6 +107,14 @@ export function CampaignsPage({ mode = 'list' }: { mode?: Mode }) {
       throw new ApiError(message, 400);
     }
   };
+
+  useEffect(() => {
+    applyApiFieldErrors(createMutation.error, setError);
+  }, [createMutation.error, setError]);
+
+  useEffect(() => {
+    applyApiFieldErrors(updateMutation.error, setError);
+  }, [updateMutation.error, setError]);
 
   const startEdit = useCallback((campaign: Campaign) => {
     setValue("id", campaign.id);

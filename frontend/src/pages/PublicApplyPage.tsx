@@ -34,13 +34,13 @@ export function PublicApplyPage() {
   const digitsOnly = (value: string) => value.replace(/\D+/g, '');
   const handleNumericString = (field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const clean = digitsOnly(e.target.value);
-    setValue(field, clean as any, { shouldValidate: true, shouldDirty: true });
+    setValue(field, clean as FormData[typeof field], { shouldValidate: true, shouldDirty: true });
     if (e.target.value !== clean) e.target.value = clean;
   };
   const handleNumericNumber = (field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const clean = digitsOnly(e.target.value);
-    const num = clean === '' ? (null as any) : Number(clean);
-    setValue(field, num as any, { shouldValidate: true, shouldDirty: true });
+    const num = clean === '' ? null : Number(clean);
+    setValue(field, num as FormData[typeof field], { shouldValidate: true, shouldDirty: true });
     if (e.target.value !== clean) e.target.value = clean;
   };
 

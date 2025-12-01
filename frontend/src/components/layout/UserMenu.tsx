@@ -13,6 +13,11 @@ export function UserMenu() {
   const initials =
     (user?.first_name?.[0] || '') + (user?.last_name?.[0] || user?.email?.[0] || '').toUpperCase();
 
+  const displayName = (() => {
+    const fullName = `${user?.first_name ?? ''} ${user?.last_name ?? ''}`.trim();
+    return fullName || user?.username || user?.email || user?.id || 'Usuario';
+  })();
+
   const handleLogout = async () => {
     setLoading(true);
     try {
@@ -53,7 +58,7 @@ export function UserMenu() {
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-500 text-white shadow-theme-xs">
           {initials || 'U'}
         </span>
-        <span className="hidden sm:block">{user?.first_name || user?.email || 'Usuario'}</span>
+        <span className="hidden sm:block">{displayName}</span>
       </button>
 
       {open && (
@@ -63,7 +68,8 @@ export function UserMenu() {
           aria-label="Opciones de usuario"
         >
           <div className="rounded-lg px-3 py-2 text-xs text-gray-500 dark:text-gray-300">
-            <p className="font-semibold text-gray-900 dark:text-white">{user?.first_name || user?.email || 'Usuario'}</p>
+            <p className="font-semibold text-gray-900 dark:text-white">{displayName}</p>
+            {user?.username && <p className="truncate">{user.username}</p>}
             {user?.email && <p className="truncate">{user.email}</p>}
           </div>
           <a

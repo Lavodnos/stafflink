@@ -1,11 +1,12 @@
 import { useForm } from 'react-hook-form';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
 import { Card, Field, Input, SectionHeader, Select, Textarea, ErrorText } from '../components/ui';
 import { ApiError } from '../lib/apiError';
+import { applyApiFieldErrors } from '../lib/applyApiFieldErrors';
 import { usePermission } from '../modules/auth/usePermission';
 import type { BlacklistEntry } from '@/features/blacklist';
 import {
@@ -61,6 +62,7 @@ export function BlacklistPage({ mode = 'list' }: { mode?: Mode }) {
     reset,
     setValue,
     watch,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<FormState>({
     defaultValues: initialForm,
@@ -130,6 +132,14 @@ export function BlacklistPage({ mode = 'list' }: { mode?: Mode }) {
     navigate('/blacklist', { replace: true });
     return undefined;
   }, [routeId, items, navigate, startEdit]);
+
+  useEffect(() => {
+    applyApiFieldErrors(createMutation.error, setError);
+  }, [createMutation.error, setError]);
+
+  useEffect(() => {
+    applyApiFieldErrors(updateMutation.error, setError);
+  }, [updateMutation.error, setError]);
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-8 text-gray-900 dark:bg-gray-900 dark:text-white">
