@@ -4,14 +4,10 @@ from __future__ import annotations
 
 from django.db import IntegrityError, transaction
 from django.utils import timezone
-from rest_framework import serializers
 
 from .. import models
 from ..validators.document_validator import validate_document
-
-
-class CandidateError(serializers.ValidationError):
-    """Error específico del dominio para facilitar la captura en vistas."""
+from .exceptions import CandidateError
 
 
 def _sanitize(value: str | None) -> str:
@@ -25,7 +21,9 @@ def _ensure_not_blacklisted(tipo_documento: str, numero_documento: str) -> None:
         dni=_sanitize(numero_documento), estado=models.Blacklist.Status.ACTIVO
     ).exists()
     if exists:
-        raise CandidateError("El documento se encuentra en blacklist.")
+        raise CandidateError(
+            "El documento se encuentra en blacklist.", field="numero_documento"
+        )
 
 
 def _ensure_link_available(link: models.Link) -> None:

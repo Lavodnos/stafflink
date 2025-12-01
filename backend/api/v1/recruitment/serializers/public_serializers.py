@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from django.utils import timezone
 from rest_framework import serializers
+from rest_framework.settings import api_settings
 
 from .. import models
 from ..services import candidate_service
+from ..services.exceptions import CandidateError
 
 
 class PublicLinkSerializer(serializers.ModelSerializer):
@@ -86,18 +88,26 @@ class PublicCandidateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         link = self.context["link"]
         validated_data.pop("link_slug", None)
-        return candidate_service.create_candidate(
-            link=link, data=validated_data, actor_id=None
-        )
+        try:
+            return candidate_service.create_candidate(
+                link=link, data=validated_data, actor_id=None
+            )
+        except CandidateError as exc:
+            # Si viene con campo específico, devolver formato DRF estándar
+            if exc.field:
+                raise serializers.ValidationError({exc.field: [str(exc)]})
+            # Si no se especifica campo, usar non_field_errors
+            non_field = api_settings.NON_FIELD_ERRORS_KEY
+            raise serializers.ValidationError({non_field: [str(exc)]})
 
     def _get_active_link(self, slug: str) -> models.Link:
         now = timezone.now()
         try:
             link = models.Link.objects.select_related("campaign").get(slug=slug)
         except models.Link.DoesNotExist as exc:
-            raise serializers.ValidationError("Link no encontrado") from exc
+            raise serializers.ValidationError({"link_slug": ["Link no encontrado"]}) from exc
         if link.estado != models.Link.Estado.ACTIVO:
-            raise serializers.ValidationError("El link no está activo")
+            raise serializers.ValidationError({"link_slug": ["El link no está activo"]})
         if link.expires_at < now:
-            raise serializers.ValidationError("El link ya venció")
+            raise serializers.ValidationError({"link_slug": ["El link ya venció"]})
         return link

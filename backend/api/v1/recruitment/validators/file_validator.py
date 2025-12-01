@@ -13,9 +13,9 @@ def validate_file(uploaded_file) -> None:
     allowed = {ext.lower() for ext in settings.STAFFLINK_ALLOWED_UPLOAD_EXTENSIONS}
 
     if uploaded_file.size > max_bytes:
-        raise serializers.ValidationError("El archivo excede el tamaño permitido.")
+        raise serializers.ValidationError({"file": ["El archivo excede el tamaño permitido."]})
 
     _, ext = os.path.splitext(uploaded_file.name)
     ext = ext.lstrip(".").lower()
     if ext not in allowed:
-        raise serializers.ValidationError("Tipo de archivo no permitido.")
+        raise serializers.ValidationError({"file": ["Tipo de archivo no permitido."]})

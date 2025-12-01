@@ -1,4 +1,4 @@
-import { apiFetch } from '../../lib/http';
+import { apiClient } from '../../lib/apiClient';
 
 export type PublicLink = {
   id: string;
@@ -45,13 +45,13 @@ export type PublicCandidatePayload = {
 };
 
 export async function fetchPublicLink(slug: string): Promise<PublicLink> {
-  return apiFetch<PublicLink>(`/v1/public/links/${slug}`);
+  return apiClient<PublicLink>(`/v1/public/links/${slug}`);
 }
 
 export async function createPublicCandidate(
   data: PublicCandidatePayload,
 ): Promise<{ id: string }> {
-  return apiFetch<{ id: string }>(`/v1/public/candidates`, {
+  return apiClient<{ id: string }>(`/v1/public/candidates`, {
     method: 'POST',
     body: JSON.stringify(data),
   });

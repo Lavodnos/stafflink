@@ -3,6 +3,26 @@ export const documentOptions = [
   { value: "ce", label: "Carné de extranjería" },
 ];
 
+export const nacionalidadOptions = [
+  "PERUANA",
+  "VENEZOLANA",
+  "CUBANA",
+  "ECUATORIANA",
+  "COLOMBIANA",
+];
+
+export const residenciaOptions = ["LIMA METROPOLITANA", "CALLAO", "PROVINCIA (DETALLAR EN OTROS)"];
+
+// Lista básica; se puede extender. Incluye un "OTRO" para capturar manualmente.
+export const distritoOptions = [
+  "ATE",
+  "COMAS",
+  "SAN JUAN DE LURIGANCHO",
+  "SAN MARTÍN DE PORRES",
+  "VILLA EL SALVADOR",
+  "OTRO",
+];
+
 export const estadoCivilOptions = [
   "SOLTERO",
   "CASADO",
@@ -50,4 +70,5 @@ export const canalOptions = [
   "FACEBOOK",
   "TIK TOK",
   "INSTAGRAM",
+  "REFERIDO (POR UN COLABORADOR DE GEA)",
 ];

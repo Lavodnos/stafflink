@@ -47,7 +47,7 @@ def set_status(*, link: models.Link, estado: str, actor_id: str | None) -> model
     if link.estado == estado:
         return link
     if estado not in models.Link.Estado.values:
-        raise serializers.ValidationError("Estado de link inválido.")
+        raise serializers.ValidationError({"estado": ["Estado de link inválido."]})
     link.estado = estado
     link.updated_by = actor_id
     link.save(update_fields=["estado", "updated_by", "updated_at"])

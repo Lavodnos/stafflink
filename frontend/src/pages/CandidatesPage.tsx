@@ -23,6 +23,18 @@ import type {
   CandidateProcess,
 } from "@/features/candidates";
 import {
+  documentOptions,
+  estadoCivilOptions,
+  nivelAcademicoOptions,
+  nacionalidadOptions,
+  residenciaOptions,
+  distritoOptions,
+  experienciaCCOptions,
+  experienciaOtraOptions,
+  tiempoExperienciaOptions,
+  canalOptions,
+} from "../modules/public/constants";
+import {
   useCandidate,
   useCandidates,
   useUpdateAssignment,
@@ -145,6 +157,7 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
     reset: resetDatos,
     formState: datosState,
     setValue: setDatos,
+    watch: watchDatos,
   } = useForm<Candidate>({
     defaultValues: {},
     resolver: zodResolver(datosSchema),
@@ -243,6 +256,8 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
       document.body.style.overflow = prevBody;
     };
   }, [showDetail]);
+
+  const hasCCExperience = watchDatos("has_callcenter_experience");
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-8 text-gray-900 dark:bg-gray-900 dark:text-white">
@@ -411,7 +426,7 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
               }}
             >
               <div
-                className="max-h-[85vh] w-full max-w-[1000px] overflow-y-auto"
+                className="max-h-[85vh] w-full max-w-[1750px] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
               >
                 <Card className="space-y-6 rounded-3xl border border-gray-200 bg-white p-6 shadow-2xl lg:p-10 dark:border-slate-800 dark:bg-slate-950">
@@ -491,23 +506,23 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
 
                       {tab === "datos" && (
                         <form
-                          className="grid gap-4 md:grid-cols-2"
-                          onSubmit={submitDatos(onSubmitDatos)}
-                        >
-                          <Field label="Tipo de documento">
-                            <Select
-                              {...registerDatos("tipo_documento")}
-                              defaultValue={detail.tipo_documento}
-                              disabled={!canEditDatos}
-                            >
-                              <option value="DNI">DNI</option>
-                              <option value="CE">CE</option>
-                            </Select>
-                          </Field>
-                          <Field label="Número documento">
-                            <Input
-                              {...registerDatos("numero_documento", {
-                                onChange: (e) =>
+                      className="grid gap-4 md:grid-cols-2"
+                      onSubmit={submitDatos(onSubmitDatos)}
+                    >
+                      <Field label="Tipo de documento">
+                        <Select {...registerDatos("tipo_documento")} defaultValue={detail.tipo_documento} disabled={!canEditDatos}>
+                          <option value="">Selecciona</option>
+                          {documentOptions.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </Select>
+                      </Field>
+                      <Field label="Número documento">
+                        <Input
+                          {...registerDatos("numero_documento", {
+                            onChange: (e) =>
                                   setDatos(
                                     "numero_documento",
                                     e.target.value.toUpperCase(),
@@ -550,17 +565,206 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
                               disabled={!canEditDatos}
                             />
                           </Field>
-                          <Field label="Estado civil">
+                          <Field label="¿Cuentas con experiencia en call center?">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                className="h-4 w-4"
+                                {...registerDatos("has_callcenter_experience")}
+                                defaultChecked={Boolean(detail.has_callcenter_experience)}
+                                disabled={!canEditDatos}
+                              />
+                              <span className="text-sm text-gray-700 dark:text-gray-200">
+                                Sí, tengo experiencia en call center
+                              </span>
+                            </div>
+                          </Field>
+                          {hasCCExperience ? (
+                            <>
+                              <Field label="Tipo de experiencia">
+                                <Select
+                                  {...registerDatos("callcenter_experience_type")}
+                                  defaultValue={detail.callcenter_experience_type ?? ""}
+                                  disabled={!canEditDatos}
+                                >
+                                  <option value="">Selecciona</option>
+                                  {experienciaCCOptions.map((opt) => (
+                                    <option key={opt} value={opt}>
+                                      {opt}
+                                    </option>
+                                  ))}
+                                </Select>
+                              </Field>
+                              <Field label="Tiempo de experiencia">
+                                <Select
+                                  {...registerDatos("callcenter_experience_time")}
+                                  defaultValue={detail.callcenter_experience_time ?? ""}
+                                  disabled={!canEditDatos}
+                                >
+                                  <option value="">Selecciona</option>
+                                  {tiempoExperienciaOptions.map((opt) => (
+                                    <option key={opt} value={opt}>
+                                      {opt}
+                                    </option>
+                                  ))}
+                                </Select>
+                              </Field>
+                            </>
+                          ) : (
+                            <>
+                              <Field label="Otra experiencia laboral">
+                                <Select
+                                  {...registerDatos("other_experience_type")}
+                                  defaultValue={detail.other_experience_type ?? ""}
+                                  disabled={!canEditDatos}
+                                >
+                                  <option value="">Selecciona</option>
+                                  {experienciaOtraOptions.map((opt) => (
+                                    <option key={opt} value={opt}>
+                                      {opt}
+                                    </option>
+                                  ))}
+                                </Select>
+                              </Field>
+                              <Field label="Tiempo de experiencia">
+                                <Select
+                                  {...registerDatos("other_experience_time")}
+                                  defaultValue={detail.other_experience_time ?? ""}
+                                  disabled={!canEditDatos}
+                                >
+                                  <option value="">Selecciona</option>
+                                  {tiempoExperienciaOptions.map((opt) => (
+                                    <option key={opt} value={opt}>
+                                      {opt}
+                                    </option>
+                                  ))}
+                                </Select>
+                              </Field>
+                            </>
+                          )}
+                          <Field label="¿Cómo te enteraste de la oferta?">
+                            <Select
+                              {...registerDatos("enteraste_oferta")}
+                              defaultValue={detail.enteraste_oferta ?? ""}
+                              disabled={!canEditDatos}
+                            >
+                              <option value="">Selecciona</option>
+                              {canalOptions.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                            </Select>
+                          </Field>
+                          <Field label="Género">
+                            <Select {...registerDatos("sexo")} defaultValue={detail.sexo ?? ""} disabled={!canEditDatos}>
+                              <option value="">Selecciona</option>
+                              <option value="FEMENINO">Femenino</option>
+                              <option value="MASCULINO">Masculino</option>
+                            </Select>
+                          </Field>
+                          <Field label="Fecha de nacimiento">
                             <Input
-                              {...registerDatos("estado_civil")}
-                              defaultValue={detail.estado_civil ?? ""}
+                              type="date"
+                              {...registerDatos("fecha_nacimiento")}
+                              defaultValue={detail.fecha_nacimiento ?? ""}
+                              disabled={!canEditDatos}
+                            />
+                          </Field>
+                          <Field label="Edad">
+                            <Input
+                              type="number"
+                              {...registerDatos("edad", { valueAsNumber: true })}
+                              defaultValue={detail.edad ?? ""}
+                              disabled={!canEditDatos}
+                            />
+                          </Field>
+                          <Field label="Estado civil">
+                            <Select {...registerDatos("estado_civil")} defaultValue={detail.estado_civil ?? ""} disabled={!canEditDatos}>
+                              <option value="">Selecciona</option>
+                              {estadoCivilOptions.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                            </Select>
+                          </Field>
+                          <Field label="N° de hijos">
+                            <Input
+                              type="number"
+                              {...registerDatos("numero_hijos", { valueAsNumber: true })}
+                              defaultValue={detail.numero_hijos ?? ""}
                               disabled={!canEditDatos}
                             />
                           </Field>
                           <Field label="Nivel académico">
+                            <Select {...registerDatos("nivel_academico")} defaultValue={detail.nivel_academico ?? ""} disabled={!canEditDatos}>
+                              <option value="">Selecciona</option>
+                              {nivelAcademicoOptions.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                            </Select>
+                          </Field>
+                          <Field label="Carrera">
                             <Input
-                              {...registerDatos("nivel_academico")}
-                              defaultValue={detail.nivel_academico ?? ""}
+                              {...registerDatos("carrera")}
+                              defaultValue={detail.carrera ?? ""}
+                              disabled={!canEditDatos}
+                            />
+                          </Field>
+                          <Field label="Nacionalidad">
+                            <Select
+                              {...registerDatos("nacionalidad")}
+                              defaultValue={detail.nacionalidad ?? ""}
+                              disabled={!canEditDatos}
+                            >
+                              <option value="">Selecciona</option>
+                              {nacionalidadOptions.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                            </Select>
+                          </Field>
+                          <Field label="Lugar de residencia">
+                            <Select
+                              {...registerDatos("lugar_residencia")}
+                              defaultValue={detail.lugar_residencia ?? ""}
+                              disabled={!canEditDatos}
+                            >
+                              <option value="">Selecciona</option>
+                              {residenciaOptions.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                            </Select>
+                          </Field>
+                          <Field label="Distrito">
+                            <Select
+                              {...registerDatos("distrito")}
+                              defaultValue={detail.distrito ?? ""}
+                              disabled={!canEditDatos}
+                            >
+                              <option value="">Selecciona</option>
+                              {/* Incluye el distrito actual si no está en la lista */}
+                              {detail.distrito &&
+                                !distritoOptions.includes(detail.distrito) && (
+                                  <option value={detail.distrito}>{detail.distrito}</option>
+                                )}
+                              {distritoOptions.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                            </Select>
+                          </Field>
+                          <Field label="Dirección de domicilio">
+                            <Input
+                              {...registerDatos("direccion")}
+                              defaultValue={detail.direccion ?? ""}
                               disabled={!canEditDatos}
                             />
                           </Field>

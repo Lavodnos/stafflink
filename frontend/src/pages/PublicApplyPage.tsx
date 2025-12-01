@@ -1,3 +1,4 @@
+import type React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
@@ -13,45 +14,65 @@ import {
   experienciaCCOptions,
   experienciaOtraOptions,
   nivelAcademicoOptions,
+  nacionalidadOptions,
+  residenciaOptions,
+  distritoOptions,
   tiempoExperienciaOptions,
 } from '../modules/public/constants';
 
-type FormData = Omit<PublicCandidatePayload, 'link_slug'>;
+type FormData = Omit<PublicCandidatePayload, 'link_slug'> & { distrito_otro?: string };
 
 export function PublicApplyPage() {
   const { slug } = useParams<{ slug: string }>();
   const [link, setLink] = useState<PublicLink | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittedId, setSubmittedId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const toUpper = (value?: string) => (value ? value.toUpperCase() : value);
+  const digitsOnly = (value: string) => value.replace(/\D+/g, '');
+  const handleNumericString = (field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const clean = digitsOnly(e.target.value);
+    setValue(field, clean as any, { shouldValidate: true, shouldDirty: true });
+    if (e.target.value !== clean) e.target.value = clean;
+  };
+  const handleNumericNumber = (field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const clean = digitsOnly(e.target.value);
+    const num = clean === '' ? (null as any) : Number(clean);
+    setValue(field, num as any, { shouldValidate: true, shouldDirty: true });
+    if (e.target.value !== clean) e.target.value = clean;
+  };
 
   const {
     register,
     handleSubmit,
     watch,
     setValue,
+    setError,
     formState: { errors },
   } = useForm<FormData>({
     defaultValues: {
       tipo_documento: 'dni',
       has_callcenter_experience: false,
+      distrito_otro: '',
     },
   });
 
   const hasCCExperience = watch('has_callcenter_experience');
+  const selectedDistrito = watch('distrito');
 
   useEffect(() => {
     let active = true;
     async function load() {
       if (!slug) return;
       setLoading(true);
-      setError(null);
+      setFetchError(null);
       try {
         const data = await fetchPublicLink(slug);
         if (active) setLink(data);
       } catch (err) {
-        setError(err instanceof ApiError ? err.message : 'No pudimos cargar el link.');
+        setFetchError(err instanceof ApiError ? err.message : 'No pudimos cargar el link.');
       } finally {
         if (active) setLoading(false);
       }
@@ -65,10 +86,13 @@ export function PublicApplyPage() {
   const onSubmit = async (data: FormData) => {
     if (!slug) return;
     setSubmitting(true);
-    setError(null);
+    setSubmitError(null);
     try {
       // Normalizar mayúsculas en campos de texto clave
       const toUpper = (value?: string) => (value ? value.toUpperCase() : value);
+      const distritoValue =
+        data.distrito === 'OTRO' ? toUpper(data.distrito_otro)?.trim() ?? '' : toUpper(data.distrito);
+
       const normalized: FormData = {
         ...data,
         apellido_paterno: toUpper(data.apellido_paterno) ?? '',
@@ -79,6 +103,7 @@ export function PublicApplyPage() {
         lugar_residencia: toUpper(data.lugar_residencia),
         carrera: toUpper(data.carrera),
         numero_documento: toUpper(data.numero_documento) ?? '',
+        distrito: distritoValue,
       };
 
       const payload: PublicCandidatePayload = {
@@ -88,7 +113,36 @@ export function PublicApplyPage() {
       const resp = await createPublicCandidate(payload);
       setSubmittedId(resp.id);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Error al enviar el formulario.');
+      setSubmitError(err instanceof ApiError ? err.message : 'Error al enviar el formulario.');
+
+      // Mapear errores del backend al campo de documento cuando vengan en lista/objeto
+      if (err instanceof ApiError && err.payload) {
+        const details = err.payload as unknown;
+        // Caso: array ["mensaje"]
+        if (Array.isArray(details) && typeof details[0] === 'string') {
+          setError('numero_documento', {
+            type: 'server',
+            message: details[0],
+          });
+        }
+        // Caso: objeto { campo: ["mensaje"] } o { campo: "mensaje" }
+        if (details && typeof details === 'object' && !Array.isArray(details)) {
+          Object.entries(details as Record<string, unknown>).forEach(([field, msgs]) => {
+            const msg =
+              Array.isArray(msgs) && typeof msgs[0] === 'string'
+                ? msgs[0]
+                : typeof msgs === 'string'
+                  ? msgs
+                  : null;
+            if (msg) {
+              setError(field as keyof FormData, {
+                type: 'server',
+                message: msg,
+              });
+            }
+          });
+        }
+      }
     } finally {
       setSubmitting(false);
     }
@@ -96,7 +150,7 @@ export function PublicApplyPage() {
 
   const headerContent = useMemo(() => {
     if (loading) return <p className="text-slate-500">Cargando link…</p>;
-    if (error) return <p className="text-red-600">{error}</p>;
+    if (fetchError) return <p className="text-red-600">{fetchError}</p>;
     if (!link) return null;
     return (
       <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-theme-lg">
@@ -125,7 +179,7 @@ export function PublicApplyPage() {
         </div>
       </div>
     );
-  }, [loading, error, link]);
+  }, [loading, fetchError, link]);
 
   if (submittedId) {
     return (
@@ -147,10 +201,15 @@ export function PublicApplyPage() {
     );
   }
 
-    return (
-      <main className="min-h-screen bg-gray-50 px-4 py-10 text-gray-900">
+  return (
+    <main className="min-h-screen bg-gray-50 px-4 py-10 text-gray-900">
       <div className="mx-auto max-w-5xl space-y-8">
         {headerContent}
+        {submitError && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {submitError}
+          </div>
+        )}
         {link && (
           <form className="rounded-2xl border border-gray-200 bg-white p-8 shadow-theme-lg space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <header className="space-y-2">
@@ -177,7 +236,9 @@ export function PublicApplyPage() {
                   Nro de documento *
                   <input
                     className="input"
+                    inputMode="numeric"
                     {...register('numero_documento', { required: 'Campo obligatorio', minLength: 4 })}
+                    onInput={handleNumericString('numero_documento')}
                     onBlur={(e) => setValue('numero_documento', e.target.value.toUpperCase())}
                   />
                 </label>
@@ -225,14 +286,24 @@ export function PublicApplyPage() {
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Celular *
-                  <input className="input" {...register('telefono', { required: 'Campo obligatorio' })} />
+                  <input
+                    className="input"
+                    inputMode="numeric"
+                    {...register('telefono', { required: 'Campo obligatorio' })}
+                    onInput={handleNumericString('telefono')}
+                  />
                 </label>
                 {errors.telefono && <p className="text-xs text-red-600">{errors.telefono.message}</p>}
               </div>
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Celular de referencia *
-                  <input className="input" {...register('telefono_referencia', { required: 'Campo obligatorio' })} />
+                  <input
+                    className="input"
+                    inputMode="numeric"
+                    {...register('telefono_referencia', { required: 'Campo obligatorio' })}
+                    onInput={handleNumericString('telefono_referencia')}
+                  />
                 </label>
                 {errors.telefono_referencia && (
                   <p className="text-xs text-red-600">{errors.telefono_referencia.message}</p>
@@ -280,6 +351,8 @@ export function PublicApplyPage() {
                       required: 'Campo obligatorio',
                       min: { value: 16, message: 'Debe ser mayor o igual a 16' },
                     })}
+                    inputMode="numeric"
+                    onInput={handleNumericNumber('edad')}
                   />
                 </label>
                 {errors.edad && <p className="text-xs text-red-600">{errors.edad.message as string}</p>}
@@ -309,6 +382,8 @@ export function PublicApplyPage() {
                       required: 'Campo obligatorio',
                       min: { value: 0, message: 'Debe ser 0 o más' },
                     })}
+                    inputMode="numeric"
+                    onInput={handleNumericNumber('numero_hijos')}
                   />
                 </label>
                 {errors.numero_hijos && <p className="text-xs text-red-600">{errors.numero_hijos.message as string}</p>}
@@ -330,21 +405,39 @@ export function PublicApplyPage() {
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Carrera *
-                  <input className="input" {...register('carrera', { required: 'Campo obligatorio' })} />
+                  <input
+                    className="input"
+                    {...register('carrera', { required: 'Campo obligatorio' })}
+                    onBlur={(e) => setValue('carrera', e.target.value.toUpperCase())}
+                  />
                 </label>
                 {errors.carrera && <p className="text-xs text-red-600">{errors.carrera.message}</p>}
               </div>
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Nacionalidad *
-                  <input className="input" {...register('nacionalidad', { required: 'Campo obligatorio' })} />
+                  <select className="input" {...register('nacionalidad', { required: 'Campo obligatorio' })}>
+                    <option value="">Selecciona</option>
+                    {nacionalidadOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 {errors.nacionalidad && <p className="text-xs text-red-600">{errors.nacionalidad.message}</p>}
               </div>
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Lugar de residencia *
-                  <input className="input" {...register('lugar_residencia', { required: 'Campo obligatorio' })} />
+                  <select className="input" {...register('lugar_residencia', { required: 'Campo obligatorio' })}>
+                    <option value="">Selecciona</option>
+                    {residenciaOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 {errors.lugar_residencia && (
                   <p className="text-xs text-red-600">{errors.lugar_residencia.message}</p>
@@ -353,14 +446,42 @@ export function PublicApplyPage() {
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Distrito de residencia *
-                  <input className="input" {...register('distrito', { required: 'Campo obligatorio' })} />
+                  <select className="input" {...register('distrito', { required: 'Campo obligatorio' })}>
+                    <option value="">Selecciona</option>
+                    {distritoOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 {errors.distrito && <p className="text-xs text-red-600">{errors.distrito.message}</p>}
               </div>
+              {selectedDistrito === 'OTRO' && (
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    Especifica el distrito *
+                    <input
+                      className="input"
+                      {...register('distrito_otro', {
+                        required: 'Campo obligatorio',
+                      })}
+                      onBlur={(e) => setValue('distrito_otro', e.target.value.toUpperCase())}
+                    />
+                  </label>
+                  {errors.distrito_otro && (
+                    <p className="text-xs text-red-600">{errors.distrito_otro.message as string}</p>
+                  )}
+                </div>
+              )}
               <div className="md:col-span-2">
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Dirección de domicilio *
-                  <input className="input" {...register('direccion', { required: 'Campo obligatorio' })} />
+                  <input
+                    className="input"
+                    {...register('direccion', { required: 'Campo obligatorio' })}
+                    onBlur={(e) => setValue('direccion', toUpper(e.target.value))}
+                  />
                 </label>
                 {errors.direccion && <p className="text-xs text-red-600">{errors.direccion.message}</p>}
               </div>
@@ -493,13 +614,15 @@ export function PublicApplyPage() {
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Observación *
-                  <input className="input" {...register('observacion', { required: 'Campo obligatorio' })} />
+                  <input
+                    className="input"
+                    {...register('observacion', { required: 'Campo obligatorio' })}
+                    onBlur={(e) => setValue('observacion', toUpper(e.target.value))}
+                  />
                 </label>
                 {errors.observacion && <p className="text-xs text-red-600">{errors.observacion.message}</p>}
               </div>
             </div>
-
-            {error && <p className="text-sm text-red-600">{error}</p>}
 
             <div className="flex flex-wrap gap-3">
               <button type="submit" className="btn-primary" disabled={submitting}>
