@@ -248,7 +248,8 @@ def _build_login_success_payload(
 
 def _format_api_exception(exc: APIException) -> dict[str, Any]:
     detail = _extract_error_detail(exc.detail)
-    error_code = detail.get("error") or "IAM_SERVICE_ERROR"
+    # IAM devuelve `code` en Problem Details; si no, usa `error`
+    error_code = detail.get("code") or detail.get("error") or "IAM_SERVICE_ERROR"
 
     if error_code == "SESSION_ALREADY_ACTIVE":
         message = SESSION_ALREADY_ACTIVE_MESSAGE
@@ -259,7 +260,10 @@ def _format_api_exception(exc: APIException) -> dict[str, Any]:
     else:
         message = detail.get("message") or DEFAULT_LOGIN_ERROR_MESSAGE
 
-    session_detail = _normalize_session_detail(detail.get("session"))
+    meta = detail.get("meta") if isinstance(detail, Mapping) else {}
+    session_detail = _normalize_session_detail(
+        detail.get("session") or (meta.get("session") if isinstance(meta, Mapping) else None)
+    )
     return _build_error_payload(error_code, message, session_detail)
 
 
