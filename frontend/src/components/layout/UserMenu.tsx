@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import cn from 'clsx';
 import { useAuth } from '../../modules/auth/useAuth';
-
-const IAM_SECURITY_URL = 'https://iam.gea.local'; // Ajusta si hay otra URL pública del IAM
+import { IAM_SECURITY_URL } from '../../config';
 
 export function UserMenu() {
   const { user, logout } = useAuth();

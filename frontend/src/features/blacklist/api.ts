@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/apiClient';
+import { normalizeListResponse, type PaginatedResponse } from '@/lib/pagination';
 
 export type BlacklistEntry = {
   id: string;
@@ -11,7 +12,10 @@ export type BlacklistEntry = {
 };
 
 export async function fetchBlacklist(): Promise<BlacklistEntry[]> {
-  return apiClient<BlacklistEntry[]>('/v1/blacklist/');
+  const payload = await apiClient<PaginatedResponse<BlacklistEntry> | BlacklistEntry[]>(
+    '/v1/blacklist/',
+  );
+  return normalizeListResponse<BlacklistEntry>(payload);
 }
 
 export async function createBlacklistEntry(

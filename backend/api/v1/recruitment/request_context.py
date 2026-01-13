@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from django.conf import settings
 from django.http import HttpRequest
 
 
@@ -16,11 +17,12 @@ def _get_from_auth(auth: Any, key: str) -> str | None:
 
 
 def get_user_id(request: HttpRequest) -> str | None:
-    header = request.headers.get("X-Stafflink-User-Id") or request.headers.get(
-        "X-User-Id"
-    )
-    if header:
-        return header
+    if getattr(settings, "STAFFLINK_ALLOW_DEBUG_HEADERS", settings.DEBUG):
+        header = request.headers.get("X-Stafflink-User-Id") or request.headers.get(
+            "X-User-Id"
+        )
+        if header:
+            return header
     auth_value = (
         _get_from_auth(request.auth, "user_id") if hasattr(request, "auth") else None
     )
@@ -34,9 +36,10 @@ def get_user_id(request: HttpRequest) -> str | None:
 
 
 def get_user_name(request: HttpRequest) -> str:
-    header = request.headers.get("X-Stafflink-User-Name")
-    if header:
-        return header
+    if getattr(settings, "STAFFLINK_ALLOW_DEBUG_HEADERS", settings.DEBUG):
+        header = request.headers.get("X-Stafflink-User-Name")
+        if header:
+            return header
     auth_value = (
         _get_from_auth(request.auth, "user_name") if hasattr(request, "auth") else None
     )

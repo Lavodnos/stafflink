@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/apiClient';
+import { normalizeListResponse, type PaginatedResponse } from '@/lib/pagination';
 
 export type Candidate = {
   id: string;
@@ -94,7 +95,8 @@ export type CandidateDetail = Candidate & {
 
 export async function fetchCandidates(linkId?: string): Promise<Candidate[]> {
   const qs = linkId ? `?link_id=${encodeURIComponent(linkId)}` : '';
-  return apiClient<Candidate[]>(`/v1/candidates/${qs}`);
+  const payload = await apiClient<PaginatedResponse<Candidate> | Candidate[]>(`/v1/candidates/${qs}`);
+  return normalizeListResponse<Candidate>(payload);
 }
 
 export async function fetchCandidate(id: string): Promise<CandidateDetail> {

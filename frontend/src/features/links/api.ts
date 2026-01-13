@@ -6,6 +6,12 @@ export type Link = {
   modalidad?: string | null;
   condicion?: string | null;
   grupo?: string | null;
+  periodo?: string | null;
+  semana_trabajo?: number | null;
+  cuotas?: number | null;
+  notes?: string | null;
+  hora_gestion?: string | null;
+  descanso?: string | null;
   expires_at: string;
   estado: 'activo' | 'expirado' | 'revocado';
 };
@@ -15,13 +21,21 @@ export type LinkPayload = Pick<Link, 'campaign' | 'slug'> & {
   modalidad?: string | null;
   condicion?: string | null;
   grupo?: string | null;
+  periodo?: string | null;
+  semana_trabajo?: number | null;
+  cuotas?: number | null;
+  notes?: string | null;
+  hora_gestion?: string | null;
+  descanso?: string | null;
   expires_at?: string | null;
 };
 
 import { apiClient } from '@/lib/apiClient';
+import { normalizeListResponse, type PaginatedResponse } from '@/lib/pagination';
 
 export async function fetchLinks(): Promise<Link[]> {
-  return apiClient('/v1/links/');
+  const payload = await apiClient<PaginatedResponse<Link> | Link[]>('/v1/links/');
+  return normalizeListResponse<Link>(payload);
 }
 
 export async function createLink(payload: LinkPayload): Promise<Link> {

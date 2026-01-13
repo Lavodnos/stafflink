@@ -1,18 +1,18 @@
 from __future__ import annotations
 
 import uuid
+import unittest
 
 from django.utils import timezone
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
-import pytest
 
 from api.v1.recruitment import models
 
 from .utils import create_applicant, create_campaign, create_link
 
 
-@pytest.mark.skip(reason="Flujo de verificación legacy no alineado con modelo/proceso actual")
+@unittest.skip("Flujo de verificación legacy no alineado con modelo/proceso actual")
 class VerificationViewSetTests(APITestCase):
     def setUp(self) -> None:
         self.campaign = create_campaign()

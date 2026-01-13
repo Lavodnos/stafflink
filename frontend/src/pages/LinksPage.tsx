@@ -2,18 +2,11 @@ import type { SubmitHandler } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import {
-  Card,
-  Field,
-  Input,
-  SectionHeader,
-  Select,
-  Textarea,
-  ErrorText,
-} from "../components/ui";
+import { PageHeader } from "../components/common/PageHeader";
+import { PageShell } from "../components/common/PageShell";
 import { ApiError } from "@/lib/apiError";
 import { applyApiFieldErrors } from "@/lib/applyApiFieldErrors";
 import { usePermission } from "../modules/auth/usePermission";
@@ -25,8 +18,27 @@ import {
   useLinks,
   useUpdateLink,
 } from "@/features/links";
+import { LinkFormCard } from "./links/LinkFormCard";
+import { LinkListCard } from "./links/LinkListCard";
+import type { LinkForm } from "./links/types";
 
-type LinkForm = LinkPayload & { id?: string };
+type Mode = "list" | "create";
+
+const defaultValues: LinkForm = {
+  campaign: "",
+  grupo: "",
+  titulo: "",
+  slug: "",
+  periodo: "",
+  semana_trabajo: undefined,
+  cuotas: undefined,
+  modalidad: "presencial",
+  condicion: "full_time",
+  hora_gestion: "",
+  descanso: "",
+  expires_at: "",
+  notes: "",
+};
 
 const linkSchema = z.object({
   id: z.string().optional(),
@@ -42,18 +54,30 @@ const linkSchema = z.object({
   notes: z.string().optional(),
   expires_at: z.string().optional(),
   semana_trabajo: z.preprocess(
-    (v) => (v === '' || v === null || v === undefined ? undefined : v),
-    z.coerce.number().optional()
+    (value) => (value === "" || value === null || value === undefined ? undefined : value),
+    z.coerce.number().optional(),
   ),
   cuotas: z.preprocess(
-    (v) => (v === '' || v === null || v === undefined ? undefined : v),
-    z.coerce.number().optional()
+    (value) => (value === "" || value === null || value === undefined ? undefined : value),
+    z.coerce.number().optional(),
   ),
 });
 
-type Mode = 'list' | 'create';
+const normalizeNumberValue = (
+  value: number | null | undefined,
+): number | undefined => (Number.isFinite(value) ? (value as number) : undefined);
 
-export function LinksPage({ mode = 'list' }: { mode?: Mode }) {
+const toLocalDateTimeInput = (isoString: string | null | undefined) => {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+    date.getHours(),
+  )}:${pad(date.getMinutes())}`;
+};
+
+export function LinksPage({ mode = "list" }: { mode?: Mode }) {
   const navigate = useNavigate();
   const { id: routeId } = useParams();
   const canReadLinks = usePermission("links.read");
@@ -68,32 +92,17 @@ export function LinksPage({ mode = 'list' }: { mode?: Mode }) {
   const updateMutation = useUpdateLink();
   const statusMutation = useLinkStatus();
 
+  const form = useForm<LinkForm>({
+    resolver: zodResolver(linkSchema),
+    defaultValues,
+  });
   const {
-    register,
-    handleSubmit,
     reset,
     setValue,
     watch,
     setError,
-    formState: { errors, isSubmitting },
-  } = useForm<LinkForm>({
-    resolver: zodResolver(linkSchema),
-    defaultValues: {
-      campaign: "",
-      grupo: "",
-      titulo: "",
-      slug: "",
-      periodo: "",
-      semana_trabajo: undefined,
-      cuotas: undefined,
-      modalidad: "presencial",
-      condicion: "full_time",
-      hora_gestion: "",
-      descanso: "",
-      expires_at: "",
-      notes: "",
-    },
-  });
+    formState: { isSubmitting },
+  } = form;
 
   const values = watch();
   const isEditing = Boolean(values.id);
@@ -142,20 +151,6 @@ export function LinksPage({ mode = 'list' }: { mode?: Mode }) {
     await statusMutation.mutateAsync({ id: linkId, action });
   };
 
-  const normalizeNumberValue = (
-    value: number | null | undefined,
-  ): number | "" => (Number.isFinite(value) ? (value as number) : "");
-
-  const toLocalDateTimeInput = (isoString: string | null | undefined) => {
-    if (!isoString) return "";
-    const date = new Date(isoString);
-    if (Number.isNaN(date.getTime())) return "";
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
-      date.getHours(),
-    )}:${pad(date.getMinutes())}`;
-  };
-
   const setFromLink = useCallback(
     (link: LinkPayload & { id: string; expires_at?: string | null }) => {
       setValue("id", link.id);
@@ -178,7 +173,7 @@ export function LinksPage({ mode = 'list' }: { mode?: Mode }) {
 
   useEffect(() => {
     if (!routeId || !items.length) return;
-    const found = items.find((l) => l.id === routeId);
+    const found = items.find((link) => link.id === routeId);
     if (found) {
       setFromLink(found);
     } else {
@@ -194,395 +189,68 @@ export function LinksPage({ mode = 'list' }: { mode?: Mode }) {
     applyApiFieldErrors(updateMutation.error, setError);
   }, [updateMutation.error, setError]);
 
-  const [search, setSearch] = useState("");
-  const filtered = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return items;
-    return items.filter((link) =>
-      [link.titulo, link.slug, link.modalidad, link.condicion, link.campaign]
-        .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(term)),
-    );
-  }, [items, search]);
+  const errorMessage =
+    error instanceof Error
+      ? error.message
+      : (createMutation.error instanceof ApiError &&
+          createMutation.error.message) ||
+        (updateMutation.error instanceof ApiError &&
+          updateMutation.error.message) ||
+        undefined;
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-8 text-gray-900 dark:bg-gray-900 dark:text-white">
-      <div className="mx-auto max-w-(--breakpoint-2xl) space-y-6">
-        <header className="flex flex-col gap-1">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Links</p>
-          <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">
-            {mode === 'create' || isRouteEditing || isEditing ? 'Crear o editar link' : 'Genera links de reclutamiento'}
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {mode === 'create' || isRouteEditing || isEditing
-              ? 'Define campaña, slug y expiración para un link.'
-              : 'Asigna campaña, parámetros por defecto y comparte el slug público.'}
-          </p>
-        </header>
+    <PageShell>
+      <PageHeader
+        eyebrow="Links"
+        title={
+          mode === "create" || isRouteEditing || isEditing
+            ? "Crear o editar link"
+            : "Genera links de reclutamiento"
+        }
+        description={
+          mode === "create" || isRouteEditing || isEditing
+            ? "Define campaña, slug y expiración para un link."
+            : "Asigna campaña, parámetros por defecto y comparte el slug público."
+        }
+      />
 
-        {(mode === 'create' || isRouteEditing) && (
-          <Card className="space-y-4">
-            <SectionHeader
-            title={isRouteEditing || isEditing ? "Editar link" : "Nuevo link"}
-            subtitle="Define campaña, slug y expiración."
-            actions={
-              (isRouteEditing || isEditing) &&
-              canManageLinks && (
-                <button
-                  type="button"
-                    className="btn-secondary"
-                    onClick={() => {
-                      reset();
-                      if (isRouteEditing) navigate("/links");
-                    }}
-                  >
-                    Cancelar edición
-                  </button>
-                )
-              }
-            />
-            <form
-              className="grid gap-4 md:grid-cols-2"
-              onSubmit={handleSubmit(onSubmit)}
-            >
-            <Field label="Campaña*">
-              <Select
-                {...register("campaign")}
-                value={values.campaign}
-                disabled={!canManageLinks}
-              >
-                <option value="">Selecciona</option>
-                {campaigns.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nombre}
-                  </option>
-                ))}
-              </Select>
-              <ErrorText message={errors.campaign?.message} />
-            </Field>
-            <Field label="Grupo">
-              <Input
-                disabled={!canManageLinks}
-                {...register("grupo", {
-                  onChange: (e) =>
-                    setValue("grupo", e.target.value.toUpperCase(), {
-                      shouldValidate: false,
-                    }),
-                })}
-                value={values.grupo}
-              />
-            </Field>
-            <Field label="Título*">
-              <Input
-                {...register("titulo")}
-                value={values.titulo}
-                disabled={!canManageLinks}
-              />
-              <ErrorText message={errors.titulo?.message} />
-            </Field>
-            <Field label="Slug público*">
-              <Input
-                {...register("slug")}
-                value={values.slug}
-                disabled={!canManageLinks}
-              />
-              <ErrorText message={errors.slug?.message} />
-            </Field>
-            <Field label="Periodo">
-              <Input
-                disabled={!canManageLinks}
-                {...register("periodo", {
-                  onChange: (e) =>
-                    setValue("periodo", e.target.value.toUpperCase(), {
-                      shouldValidate: false,
-                    }),
-                })}
-                value={values.periodo ?? ""}
-              />
-            </Field>
-            <Field label="Semana de trabajo">
-              <Input
-                type="number"
-                {...register("semana_trabajo", {
-                  valueAsNumber: true,
-                })}
-                disabled={!canManageLinks}
-                value={normalizeNumberValue(values.semana_trabajo)}
-              />
-              <ErrorText message={errors.semana_trabajo?.message as string | undefined} />
-            </Field>
-            <Field label="Cuotas">
-              <Input
-                type="number"
-                {...register("cuotas", {
-                  valueAsNumber: true,
-                })}
-                value={normalizeNumberValue(values.cuotas)}
-                disabled={!canManageLinks}
-              />
-              <ErrorText message={errors.cuotas?.message as string | undefined} />
-            </Field>
-            <Field label="Modalidad">
-              <Select
-                {...register("modalidad")}
-                value={values.modalidad}
-                disabled={!canManageLinks}
-              >
-                <option value="presencial">Presencial</option>
-                <option value="remoto">Remoto</option>
-                <option value="hibrido">Híbrido</option>
-              </Select>
-            </Field>
-            <Field label="Condición">
-              <Select
-                {...register("condicion")}
-                value={values.condicion}
-                disabled={!canManageLinks}
-              >
-                <option value="full_time">Full Time</option>
-                <option value="part_time">Part Time</option>
-                <option value="flex">Flexible</option>
-              </Select>
-            </Field>
-            <Field label="Hora de gestión">
-              <Input
-                {...register("hora_gestion")}
-                value={values.hora_gestion ?? ""}
-                disabled={!canManageLinks}
-              />
-            </Field>
-            <Field label="Descanso">
-              <Input
-                {...register("descanso")}
-                value={values.descanso ?? ""}
-                disabled={!canManageLinks}
-              />
-            </Field>
-            <Field label="Expira el*">
-              <Input
-                type="datetime-local"
-                {...register("expires_at")}
-                disabled={!canManageLinks}
-                value={values.expires_at}
-              />
-              <ErrorText message={errors.expires_at?.message} />
-            </Field>
-            <div className="md:col-span-2">
-              <Field label="Notas">
-                <Textarea
-                  {...register("notes")}
-                  value={values.notes ?? ""}
-                  disabled={!canManageLinks}
-                />
-              </Field>
-            </div>
+      {(mode === "create" || isRouteEditing) && (
+        <LinkFormCard
+          form={form}
+          campaigns={campaigns}
+          canManageLinks={canManageLinks}
+          isEditing={isEditing}
+          isRouteEditing={isRouteEditing}
+          saving={saving}
+          errorMessage={errorMessage}
+          onSubmit={onSubmit}
+          onCancelEdit={() => {
+            if (isRouteEditing) navigate("/links");
+          }}
+        />
+      )}
 
-            {(error || createMutation.error || updateMutation.error) && (
-              <p className="text-sm text-red-600 md:col-span-2">
-                {error instanceof Error
-                  ? error.message
-                  : (createMutation.error instanceof ApiError &&
-                      createMutation.error.message) ||
-                    (updateMutation.error instanceof ApiError &&
-                      updateMutation.error.message) ||
-                    "Error al guardar"}
-              </p>
-            )}
-
-            <div className="flex gap-3 md:col-span-2">
-              <button
-                type="submit"
-                className="btn-primary"
-                disabled={saving || !canManageLinks}
-              >
-                {saving
-                  ? "Guardando…"
-                  : (isEditing || isRouteEditing)
-                    ? "Actualizar"
-                    : "Crear link"}
-              </button>
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={() => reset()}
-                disabled={saving || !canManageLinks}
-              >
-                Limpiar
-              </button>
-            </div>
-          </form>
-          {!canManageLinks && (
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              No tienes permiso para crear o editar links.
-            </p>
-          )}
-        </Card>
-        )}
-
-        {mode === 'list' && canReadLinks && (
-          <Card className="space-y-3">
-          <SectionHeader
-            title="Listado"
-            actions={(
-              <div className="flex items-center gap-2">
-                {canManageLinks && (
-                  <button
-                    type="button"
-                    className="btn-secondary px-3 py-2 text-sm"
-                    aria-label="Exportar links"
-                    onClick={() => {
-                      // TODO: integrar export real
-                    }}
-                  >
-                    Exportar
-                  </button>
-                )}
-                {canManageLinks && (
-                  <button
-                    type="button"
-                    className="btn-primary px-4 py-2 text-sm"
-                    onClick={() => navigate('/links/new')}
-                  >
-                    + Crear link
-                  </button>
-                )}
-              </div>
-            )}
-          />
-          {!isLoading && items.length === 0 && (
-            <p className="text-sm text-gray-500 dark:text-gray-400">Sin links.</p>
-          )}
-          {(
-            <>
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <label className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                  Mostrar
-                  <select className="input w-20" disabled>
-                    <option>10</option>
-                  </select>
-                  entradas
-                </label>
-                <div className="relative">
-                  <input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Buscar..."
-                    className="input w-56 pl-9"
-                    aria-label="Buscar links"
-                  />
-                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                    🔍
-                  </span>
-                </div>
-              </div>
-              <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800">
-                <table className="min-w-full text-left text-sm text-gray-700 dark:text-gray-200">
-                  <thead className="bg-gray-50 text-xs font-semibold uppercase text-gray-500 dark:bg-gray-800 dark:text-gray-300">
-                    <tr>
-                      <th className="px-4 py-3">Slug</th>
-                      <th className="px-4 py-3">Título</th>
-                      <th className="px-4 py-3">Campaña</th>
-                      <th className="px-4 py-3">Modalidad</th>
-                      <th className="px-4 py-3">Condición</th>
-                      <th className="px-4 py-3">Expira</th>
-                      <th className="px-4 py-3">Estado</th>
-                      <th className="px-4 py-3 text-right">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-900">
-                    {filtered.map((link) => (
-                      <tr key={link.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/80">
-                        <td className="px-4 py-3 text-xs uppercase text-gray-500 dark:text-gray-400">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono">{link.slug}</span>
-                            <button
-                              type="button"
-                              className="text-[11px] font-semibold text-brand-600 hover:underline dark:text-brand-400"
-                              onClick={() => {
-                                const url = `${window.location.origin}/apply/${link.slug}`;
-                                navigator.clipboard?.writeText(url);
-                              }}
-                            >
-                              Copiar link
-                            </button>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">{link.titulo}</td>
-                        <td className="px-4 py-3">{link.campaign}</td>
-                        <td className="px-4 py-3">{link.modalidad}</td>
-                        <td className="px-4 py-3">{link.condicion}</td>
-                        <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">
-                          {new Intl.DateTimeFormat("es-PE", {
-                            dateStyle: "medium",
-                            timeStyle: "short",
-                          }).format(new Date(link.expires_at))}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="pill">{link.estado}</span>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex flex-wrap justify-end gap-2 text-xs">
-                            <button
-                              type="button"
-                              className="btn-secondary px-3 py-1.5"
-                              disabled={!canReadCandidates}
-                              onClick={() =>
-                                navigate(
-                                  `/links/${link.id}/candidates?link_id=${link.id}&link_slug=${encodeURIComponent(
-                                    link.slug,
-                                  )}&link_title=${encodeURIComponent(link.titulo ?? '')}`,
-                                )
-                              }
-                            >
-                              Ver candidatos
-                            </button>
-                            {canManageLinks && (
-                              <>
-                                <button
-                                  type="button"
-                                  className="btn-primary px-3 py-1.5"
-                                  onClick={() => navigate(`/links/${link.id}/edit`)}
-                                >
-                                  Editar
-                                </button>
-                                {canCloseLinks && (
-                                  <>
-                                    {link.estado === 'activo' && (
-                                      <button
-                                        type="button"
-                                        className="px-3 py-1.5 rounded-full border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-500/40 dark:text-red-300 dark:hover:bg-red-900/20"
-                                        onClick={() => changeStatus(link.id, "expire")}
-                                        disabled={statusMutation.isPending}
-                                      >
-                                        Expirar
-                                      </button>
-                                    )}
-                                    {link.estado !== 'activo' && (
-                                      <button
-                                        type="button"
-                                        className="px-3 py-1.5 rounded-full border border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500/40 dark:text-emerald-200 dark:hover:bg-emerald-900/20"
-                                        onClick={() => changeStatus(link.id, "activate")}
-                                        disabled={statusMutation.isPending}
-                                      >
-                                        Activar
-                                      </button>
-                                    )}
-                                  </>
-                                )}
-                              </>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-          </Card>
-        )}
-      </div>
-    </main>
+      {mode === "list" && (
+        <LinkListCard
+          links={items}
+          canRead={canReadLinks}
+          canManage={canManageLinks}
+          canClose={canCloseLinks}
+          canReadCandidates={canReadCandidates}
+          isLoading={isLoading}
+          isStatusPending={statusMutation.isPending}
+          onCreate={() => navigate("/links/new")}
+          onEdit={(id) => navigate(`/links/${id}/edit`)}
+          onViewCandidates={(link) =>
+            navigate(
+              `/links/${link.id}/candidates?link_id=${link.id}&link_slug=${encodeURIComponent(
+                link.slug,
+              )}&link_title=${encodeURIComponent(link.titulo ?? "")}`,
+            )
+          }
+          onChangeStatus={changeStatus}
+        />
+      )}
+    </PageShell>
   );
 }

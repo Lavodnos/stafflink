@@ -47,6 +47,9 @@ SECRET_KEY = os.environ.get(
 DEBUG = _env_bool(os.environ.get("DEBUG"), default=True)
 
 ALLOWED_HOSTS = _env_list(os.environ.get("ALLOWED_HOSTS"))
+STAFFLINK_ALLOW_DEBUG_HEADERS = _env_bool(
+    os.environ.get("STAFFLINK_ALLOW_DEBUG_HEADERS"), default=DEBUG
+)
 
 
 # Application definition
@@ -145,6 +148,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = os.environ.get("STATIC_ROOT", str(BASE_DIR / "staticfiles"))
+
+MEDIA_URL = os.environ.get("MEDIA_URL", "/media/")
+MEDIA_ROOT = os.environ.get("MEDIA_ROOT", str(BASE_DIR / "media"))
 
 # REST Framework base configuration
 REST_FRAMEWORK: dict[str, Any] = {
@@ -153,6 +160,8 @@ REST_FRAMEWORK: dict[str, Any] = {
     ],
     "DEFAULT_PERMISSION_CLASSES": [],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_PAGINATION_CLASS": "api.v1.recruitment.pagination.StandardResultsSetPagination",
+    "PAGE_SIZE": 25,
     "UNAUTHENTICATED_USER": None,
 }
 
@@ -179,6 +188,32 @@ else:
     ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Security (production hardening)
+SECURE_SSL_REDIRECT = _env_bool(
+    os.environ.get("SECURE_SSL_REDIRECT"), default=not DEBUG
+)
+SESSION_COOKIE_SECURE = _env_bool(
+    os.environ.get("SESSION_COOKIE_SECURE"), default=not DEBUG
+)
+CSRF_COOKIE_SECURE = _env_bool(
+    os.environ.get("CSRF_COOKIE_SECURE"), default=not DEBUG
+)
+SECURE_HSTS_SECONDS = int(
+    os.environ.get("SECURE_HSTS_SECONDS", "0" if DEBUG else "3600")
+)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = _env_bool(
+    os.environ.get("SECURE_HSTS_INCLUDE_SUBDOMAINS"), default=not DEBUG
+)
+SECURE_HSTS_PRELOAD = _env_bool(
+    os.environ.get("SECURE_HSTS_PRELOAD"), default=False
+)
+SECURE_PROXY_SSL_HEADER = (
+    ("HTTP_X_FORWARDED_PROTO", "https")
+    if _env_bool(os.environ.get("SECURE_PROXY_SSL_HEADER"), default=not DEBUG)
+    else None
+)
+CSRF_TRUSTED_ORIGINS = _env_list(os.environ.get("CSRF_TRUSTED_ORIGINS"))
 
 # IAM integration
 IAM_BASE_URL = os.environ.get("IAM_BASE_URL", "http://localhost:58000/api/v1").rstrip(
@@ -236,3 +271,29 @@ STAFFLINK_ALLOWED_UPLOAD_EXTENSIONS = _env_list(
 STAFFLINK_EXPORT_OUTPUT_DIR = os.environ.get(
     "STAFFLINK_EXPORT_OUTPUT_DIR", str(BASE_DIR / "var" / "exports")
 )
+
+# Logging
+DJANGO_LOG_LEVEL = os.environ.get("DJANGO_LOG_LEVEL", "INFO").upper()
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "standard": {
+            "format": "%(levelname)s %(asctime)s %(name)s %(message)s",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+        },
+    },
+    "root": {"handlers": ["console"], "level": DJANGO_LOG_LEVEL},
+    "loggers": {
+        "django.request": {
+            "handlers": ["console"],
+            "level": DJANGO_LOG_LEVEL,
+            "propagate": False,
+        },
+    },
+}

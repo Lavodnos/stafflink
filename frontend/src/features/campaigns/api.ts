@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/apiClient';
+import { normalizeListResponse, type PaginatedResponse } from '@/lib/pagination';
 
 export type Campaign = {
   id: string;
@@ -12,7 +13,8 @@ export type Campaign = {
 };
 
 export async function fetchCampaigns(): Promise<Campaign[]> {
-  return apiClient<Campaign[]>('/v1/campaigns/');
+  const payload = await apiClient<PaginatedResponse<Campaign> | Campaign[]>('/v1/campaigns/');
+  return normalizeListResponse<Campaign>(payload);
 }
 
 export async function createCampaign(payload: Omit<Campaign, 'id' | 'created_at' | 'updated_at'>) {

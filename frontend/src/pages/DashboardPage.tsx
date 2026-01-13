@@ -1,5 +1,4 @@
-import { useMemo, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useMemo } from 'react';
 import Chart from 'react-apexcharts';
 import type { ApexOptions } from 'apexcharts';
 import { useLinks } from '@/features/links';
@@ -13,6 +12,9 @@ import {
 } from '@/features/candidates';
 import { useBlacklist } from '@/features/blacklist';
 import { usePermission } from '../modules/auth/usePermission';
+import { useThemeMode } from '../hooks/useThemeMode';
+import { StatCard } from '../components/common/StatCard';
+import { ChartCard } from '../components/common/ChartCard';
 
 export function DashboardPage() {
   const canReadCampaigns = usePermission('campaigns.read');
@@ -25,16 +27,7 @@ export function DashboardPage() {
   const { data: candidates = [] } = useCandidates(canReadCandidates);
   const { data: blacklist = [] } = useBlacklist(canReadBlacklist);
 
-  const [isDark, setIsDark] = useState(() =>
-    typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : false,
-  );
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains('dark'));
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
+  const { isDark } = useThemeMode();
 
   const summary = [
     { title: 'Campañas', value: campaigns.length, to: '/campaigns' },
@@ -217,23 +210,16 @@ export function DashboardPage() {
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {summary.map((item) => (
-          <Link key={item.title} to={item.to} className="card transition hover:shadow-theme-lg">
-            <p className="text-sm text-gray-500 dark:text-[#9fb3d1]">{item.title}</p>
-            <p className="mt-2 text-3xl font-semibold">{item.value}</p>
-          </Link>
+          <StatCard key={item.title} label={item.title} value={item.value} to={item.to} />
         ))}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <div className="card lg:col-span-2">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold">Embudo de candidatos</h3>
-              <p className="text-sm text-gray-500 dark:text-[#9fb3d1]">
-                Registrados → Documentos completos → Aptos → Contratados
-              </p>
-            </div>
-          </div>
+        <div className="lg:col-span-2">
+          <ChartCard
+            title="Embudo de candidatos"
+            subtitle="Registrados → Documentos completos → Aptos → Contratados"
+          >
           <Chart
             options={funnelOptions}
             series={[{ name: 'Candidatos', data: [
@@ -245,45 +231,37 @@ export function DashboardPage() {
             type="bar"
             height={300}
           />
+          </ChartCard>
         </div>
 
-        <div className="card">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold">Canal de origen</h3>
-              <p className="text-sm text-gray-500 dark:text-[#9fb3d1]">Distribución de “¿Cómo te enteraste?”</p>
-            </div>
-          </div>
+        <ChartCard
+          title="Canal de origen"
+          subtitle="Distribución de “¿Cómo te enteraste?”"
+        >
           {canalSeries.labels.length ? (
             <Chart options={canalOptions} series={canalSeries.data} type="donut" height={300} />
           ) : (
             <p className="text-sm text-gray-500">Sin datos de candidatos</p>
           )}
-        </div>
+        </ChartCard>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="card">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold">Docs completos por campaña</h3>
-              <p className="text-sm text-gray-500 dark:text-[#9fb3d1]">Porcentaje de checklist completado</p>
-            </div>
-          </div>
+        <ChartCard
+          title="Docs completos por campaña"
+          subtitle="Porcentaje de checklist completado"
+        >
           {docsPorCampana.labels.length ? (
             <Chart options={docsCampOptions} series={[{ name: '% completo', data: docsPorCampana.data }]} type="bar" height={300} />
           ) : (
             <p className="text-sm text-gray-500">Sin datos de candidatos</p>
           )}
-        </div>
+        </ChartCard>
 
-        <div className="card">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold">Contratados vs pendientes (últimos 30 días)</h3>
-              <p className="text-sm text-gray-500 dark:text-[#9fb3d1]">Por campaña</p>
-            </div>
-          </div>
+        <ChartCard
+          title="Contratados vs pendientes (últimos 30 días)"
+          subtitle="Por campaña"
+        >
           {contratadosPorCampana.labels.length ? (
             <Chart
               options={contratadosOptions}
@@ -297,7 +275,7 @@ export function DashboardPage() {
           ) : (
             <p className="text-sm text-gray-500">Sin datos recientes</p>
           )}
-        </div>
+        </ChartCard>
       </div>
     </div>
   );

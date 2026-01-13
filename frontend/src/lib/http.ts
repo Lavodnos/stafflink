@@ -10,8 +10,9 @@ export async function apiFetch<TResponse = MaybeJson>(
   options: ApiFetchOptions = {},
 ): Promise<TResponse> {
   const { skipJson, headers, ...rest } = options;
+  const isFormData = typeof FormData !== 'undefined' && rest.body instanceof FormData;
   const requestHeaders: HeadersInit = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(headers ?? {}),
   };
 

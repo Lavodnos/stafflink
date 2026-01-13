@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import pytest
+import unittest
 
 
-@pytest.mark.skip(reason="Flujo de exportaciones no implementado en el dominio actual")
-class ExportViewSetTests:
+@unittest.skip("Flujo de exportaciones no implementado en el dominio actual")
+class ExportViewSetTests(unittest.TestCase):
     ...

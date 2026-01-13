@@ -7,6 +7,32 @@ venv/
 __pycache__/
 *.py[cod]
 
+# Cache y herramientas Python
+.mypy_cache/
+.pytest_cache/
+
+# Bases de datos locales
+*.sqlite3
+
+# Archivos de entorno
+.env
+.env.*
+!.env.example
+
+# Node / frontend build
+node_modules/
+dist/
+dist-ssr/
+coverage/
+*.local
+
+# Logs
+*.log
+
+# Editor / SO
+.DS_Store
+Thumbs.db
+
  
  
  

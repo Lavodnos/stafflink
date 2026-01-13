@@ -7,6 +7,7 @@ import { BlacklistPage } from './pages/BlacklistPage';
 import { LinksPage } from './pages/LinksPage';
 import { CandidatesPage } from './pages/CandidatesPage';
 import { PublicApplyPage } from './pages/PublicApplyPage';
+import { ForbiddenPage } from './pages/ForbiddenPage';
 import { RequireAuth } from './routes/RequireAuth';
 import AppLayout from './layout/AppLayout';
 import { ToastContainer } from './components/ToastContainer';
@@ -27,6 +28,7 @@ function App() {
           )}
         >
           <Route index element={<DashboardPage />} />
+          <Route path="/forbidden" element={<ForbiddenPage />} />
           <Route
             path="/campaigns"
             element={(

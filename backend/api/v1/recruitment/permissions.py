@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Set
 
+from django.conf import settings
 from rest_framework.permissions import BasePermission
 
 
@@ -26,9 +27,10 @@ def get_permissions_from_request(request) -> Set[str]:
         perms = getattr(user, "permissions")
         if isinstance(perms, (list, tuple, set)):
             candidates.extend(str(value) for value in perms)
-    header = request.META.get("HTTP_X_STAFFLINK_PERMISSIONS")
-    if header:
-        candidates.extend(part.strip() for part in header.split(",") if part.strip())
+    if getattr(settings, "STAFFLINK_ALLOW_DEBUG_HEADERS", settings.DEBUG):
+        header = request.META.get("HTTP_X_STAFFLINK_PERMISSIONS")
+        if header:
+            candidates.extend(part.strip() for part in header.split(",") if part.strip())
     return {perm.strip().lower() for perm in candidates if perm}
 
 

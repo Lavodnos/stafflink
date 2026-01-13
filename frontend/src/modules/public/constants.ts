@@ -31,6 +31,11 @@ export const estadoCivilOptions = [
   "CONVIVIENTE",
 ];
 
+export const sexoOptions = [
+  { value: "FEMENINO", label: "Femenino" },
+  { value: "MASCULINO", label: "Masculino" },
+];
+
 export const nivelAcademicoOptions = [
   "SECUNDARIA COMPLETA",
   "TÉCNICO CULMINADO",
