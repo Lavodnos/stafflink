@@ -20,8 +20,15 @@ function filterCandidates(candidates: Candidate[], term: string) {
   if (!normalized) return candidates;
   return candidates.filter((candidate) =>
     [
+      candidate.id,
       candidate.nombres_completos,
+      candidate.apellido_paterno,
+      candidate.apellido_materno,
       candidate.numero_documento,
+      candidate.telefono,
+      candidate.enteraste_oferta,
+      candidate.estado,
+      candidate.estado_personal,
       candidate.modalidad,
       candidate.condicion,
     ]
@@ -97,17 +104,22 @@ export function CandidateList({
             <table className="min-w-full text-left text-sm text-gray-700 dark:text-gray-200">
               <thead className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase dark:bg-gray-800 dark:text-gray-300">
                 <tr>
+                  <th className="px-4 py-3">ID</th>
                   <th className="px-4 py-3">Documento</th>
-                  <th className="px-4 py-3">Nombre</th>
-                  <th className="px-4 py-3">Modalidad</th>
-                  <th className="px-4 py-3">Condición</th>
+                  <th className="px-4 py-3">Apellido paterno</th>
+                  <th className="px-4 py-3">Apellido materno</th>
+                  <th className="px-4 py-3">Nombres</th>
+                  <th className="px-4 py-3">Teléfono</th>
+                  <th className="px-4 py-3">Medio captación (link)</th>
+                  <th className="px-4 py-3">Estado</th>
+                  <th className="px-4 py-3">Estado del personal</th>
                   <th className="px-4 py-3 text-right">Acción</th>
                 </tr>
               </thead>
               <VirtualizedTableBody
                 items={filteredList}
                 rowHeight={56}
-                colSpan={5}
+                colSpan={10}
                 containerRef={tableRef}
                 className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-gray-900"
                 renderRow={(candidate) => (
@@ -115,17 +127,32 @@ export function CandidateList({
                     key={candidate.id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-800/80"
                   >
+                    <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 break-all">
+                      {candidate.id}
+                    </td>
                     <td className="px-4 py-3 text-xs text-gray-500 uppercase dark:text-gray-400">
                       {candidate.numero_documento}
+                    </td>
+                    <td className="px-4 py-3 text-gray-900 dark:text-white">
+                      {candidate.apellido_paterno || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-900 dark:text-white">
+                      {candidate.apellido_materno || "—"}
                     </td>
                     <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">
                       {candidate.nombres_completos}
                     </td>
                     <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
-                      {candidate.modalidad || "—"}
+                      {candidate.telefono || "—"}
                     </td>
                     <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
-                      {candidate.condicion || "—"}
+                      {candidate.enteraste_oferta || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                      {candidate.estado || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                      {candidate.estado_personal || "—"}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button

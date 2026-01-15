@@ -17,7 +17,12 @@ from ..services import candidate_service
 
 
 class CandidateViewSet(viewsets.ModelViewSet):
-    queryset = models.Candidate.objects.select_related("link", "link__campaign")
+    queryset = models.Candidate.objects.select_related(
+        "link",
+        "link__campaign",
+        "assignment",
+        "process",
+    )
     serializer_class = CandidateListSerializer
     permission_classes = [permission_class("candidates.read")]
 

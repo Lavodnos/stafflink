@@ -161,6 +161,16 @@ class CandidateWriteSerializer(serializers.ModelSerializer):
 class CandidateListSerializer(serializers.ModelSerializer):
     convocatoria = ConvocatoriaSummarySerializer(source="link", read_only=True)
     convocatoria_id = serializers.UUIDField(source="link_id", read_only=True)
+    estado = serializers.SerializerMethodField()
+    estado_personal = serializers.SerializerMethodField()
+
+    def get_estado(self, obj):
+        assignment = getattr(obj, "assignment", None)
+        return getattr(assignment, "estado", "") if assignment else ""
+
+    def get_estado_personal(self, obj):
+        process = getattr(obj, "process", None)
+        return getattr(process, "status_final", "") if process else ""
 
     class Meta:
         model = models.Candidate
@@ -170,13 +180,18 @@ class CandidateListSerializer(serializers.ModelSerializer):
             "convocatoria_id",
             "tipo_documento",
             "numero_documento",
+            "apellido_paterno",
+            "apellido_materno",
             "nombres_completos",
             "email",
             "telefono",
+            "enteraste_oferta",
             "modalidad",
             "condicion",
             "hora_gestion",
             "descanso",
+            "estado",
+            "estado_personal",
             "created_at",
             "updated_at",
         ]

@@ -44,6 +44,8 @@ export type Candidate = {
   condicion?: string | null;
   hora_gestion?: string | null;
   descanso?: string | null;
+  estado?: string | null;
+  estado_personal?: string | null;
   created_at?: string;
   updated_at?: string;
 };
