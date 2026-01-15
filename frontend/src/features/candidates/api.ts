@@ -1,9 +1,19 @@
 import { apiClient } from '@/lib/apiClient';
 import { normalizeListResponse, type PaginatedResponse } from '@/lib/pagination';
 
+export type CandidateConvocatoria = {
+  id: string;
+  slug: string;
+  titulo?: string | null;
+  grupo?: string | null;
+  campaign_id?: string;
+  campaign_nombre?: string;
+};
+
 export type Candidate = {
   id: string;
-  link_id: string;
+  convocatoria_id: string;
+  convocatoria?: CandidateConvocatoria;
   tipo_documento: string;
   numero_documento: string;
   apellido_paterno: string;
@@ -93,9 +103,13 @@ export type CandidateDetail = Candidate & {
   assignment?: CandidateAssignment;
 };
 
-export async function fetchCandidates(linkId?: string): Promise<Candidate[]> {
-  const qs = linkId ? `?link_id=${encodeURIComponent(linkId)}` : '';
-  const payload = await apiClient<PaginatedResponse<Candidate> | Candidate[]>(`/v1/candidates/${qs}`);
+export async function fetchCandidates(convocatoriaId?: string): Promise<Candidate[]> {
+  const qs = convocatoriaId
+    ? `?convocatoria_id=${encodeURIComponent(convocatoriaId)}`
+    : '';
+  const payload = await apiClient<PaginatedResponse<Candidate> | Candidate[]>(
+    `/v1/candidates/${qs}`,
+  );
   return normalizeListResponse<Candidate>(payload);
 }
 

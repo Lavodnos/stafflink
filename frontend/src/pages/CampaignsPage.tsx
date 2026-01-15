@@ -9,6 +9,7 @@ import { PageShell } from "../components/common/PageShell";
 import { ApiError } from "../lib/apiError";
 import { applyApiFieldErrors } from "../lib/applyApiFieldErrors";
 import { usePermission } from "../modules/auth/usePermission";
+import { scrollToTop } from "../lib/scrollToTop";
 import type { Campaign } from "@/features/campaigns";
 import {
   AREA_OPTIONS,
@@ -151,7 +152,7 @@ export function CampaignsPage({ mode = "list" }: { mode?: Mode }) {
         description={
           mode === "create" || isRouteEditing || isEditing
             ? "Completa los datos para registrar o actualizar una campaña."
-            : "Crea o edita campañas activas para asignarlas a links de reclutamiento."
+            : "Crea o edita campañas activas para asignarlas a convocatorias de reclutamiento."
         }
       />
 
@@ -182,7 +183,7 @@ export function CampaignsPage({ mode = "list" }: { mode?: Mode }) {
           onCreate={() => navigate("/campaigns/new")}
           onEdit={(campaign) => {
             startEdit(campaign);
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            scrollToTop();
           }}
         />
       )}

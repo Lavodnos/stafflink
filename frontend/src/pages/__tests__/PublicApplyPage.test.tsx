@@ -6,7 +6,7 @@ import { PublicApplyPage } from '../PublicApplyPage';
 
 vi.mock('../../modules/public/api', () => {
   return {
-    fetchPublicLink: vi.fn(async () => ({
+    fetchPublicConvocatoria: vi.fn(async () => ({
       titulo: 'Campaña test',
       campaign: 'Test',
       modalidad: 'presencial',
@@ -35,7 +35,7 @@ describe('PublicApplyPage', () => {
 
   it('incluye opción Referido en “Cómo te enteraste”', async () => {
     setup();
-    await screen.findByText('Campaña test'); // espera carga del link
+    await screen.findByText('Campaña test'); // espera carga de la convocatoria
     fireEvent.click(screen.getByLabelText(/¿Cómo te enteraste/i));
     const option = screen.getByRole('option', { name: /referido/i });
     expect(option).toBeInTheDocument();

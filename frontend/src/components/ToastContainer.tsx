@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 
 type Toast = {
@@ -9,6 +9,7 @@ type Toast = {
 
 export function ToastContainer() {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const timeoutIds = useRef<number[]>([]);
 
   useEffect(() => {
     let counter = 0;
@@ -18,12 +19,17 @@ export function ToastContainer() {
       const id = ++counter;
       const next: Toast = { id, message: detail.message, type: detail.type ?? 'info' };
       setToasts((prev) => [...prev, next]);
-      setTimeout(() => {
+      const timeoutId = window.setTimeout(() => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
       }, 3000);
+      timeoutIds.current.push(timeoutId);
     };
     window.addEventListener('app:toast', handler as EventListener);
-    return () => window.removeEventListener('app:toast', handler as EventListener);
+    return () => {
+      window.removeEventListener('app:toast', handler as EventListener);
+      timeoutIds.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+      timeoutIds.current = [];
+    };
   }, []);
 
   if (!toasts.length) return null;

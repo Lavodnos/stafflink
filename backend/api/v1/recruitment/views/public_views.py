@@ -6,12 +6,12 @@ from rest_framework import generics, permissions
 from .. import models
 from ..serializers.public_serializers import (
     PublicCandidateSerializer,
-    PublicLinkSerializer,
+    PublicConvocatoriaSerializer,
 )
 
 
-class PublicLinkDetailView(generics.RetrieveAPIView):
-    serializer_class = PublicLinkSerializer
+class PublicConvocatoriaDetailView(generics.RetrieveAPIView):
+    serializer_class = PublicConvocatoriaSerializer
     permission_classes = [permissions.AllowAny]
     lookup_field = "slug"
 
@@ -19,10 +19,13 @@ class PublicLinkDetailView(generics.RetrieveAPIView):
         return models.Link.objects.select_related("campaign")
 
     def get_object(self):
-        link = super().get_object()
-        if link.estado != models.Link.Estado.ACTIVO or link.expires_at < timezone.now():
+        convocatoria = super().get_object()
+        if (
+            convocatoria.estado != models.Link.Estado.ACTIVO
+            or convocatoria.expires_at < timezone.now()
+        ):
             raise generics.Http404
-        return link
+        return convocatoria
 
 
 class PublicCandidateCreateView(generics.CreateAPIView):

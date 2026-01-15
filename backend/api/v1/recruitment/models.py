@@ -26,6 +26,12 @@ def _empty_dict() -> dict[str, Any]:
     return {}
 
 
+def _empty_list() -> list[dict[str, Any]]:
+    """Return a new list for JSONField defaults."""
+
+    return []
+
+
 class Campaign(TimeStampedModel):
     """Descripción base de la campaña."""
 
@@ -101,6 +107,7 @@ class Link(TimeStampedModel):
     grupo = models.CharField(max_length=50, blank=True, default="")
     user_id = models.UUIDField(null=True, blank=True)
     user_name = models.CharField(max_length=255, blank=True, default="")
+    encargados = models.JSONField(default=_empty_list, blank=True)
     periodo = models.CharField(max_length=32, blank=True, default="")
     slug = models.SlugField(max_length=64, unique=True)
     titulo = models.CharField(max_length=255)
@@ -127,6 +134,30 @@ class Link(TimeStampedModel):
     )
     hora_gestion = models.CharField(max_length=64, blank=True, default="")
     descanso = models.CharField(max_length=64, blank=True, default="")
+    tipo_contratacion = models.CharField(max_length=64, blank=True, default="")
+    razon_social = models.CharField(max_length=120, blank=True, default="")
+    remuneracion = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    bono_variable = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    bono_movilidad = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    bono_bienvenida = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    bono_permanencia = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    bono_asistencia = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    cargo_contractual = models.CharField(max_length=120, blank=True, default="")
+    pago_capacitacion = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
     created_by = models.UUIDField(null=True, blank=True)
     updated_by = models.UUIDField(null=True, blank=True)
 

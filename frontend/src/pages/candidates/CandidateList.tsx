@@ -10,6 +10,7 @@ type CandidateListProps = {
   candidates: Candidate[];
   isLoading: boolean;
   canRead: boolean;
+  canCreate: boolean;
   onSelect: (id: string) => void;
   onCreate: () => void;
 };
@@ -33,6 +34,7 @@ export function CandidateList({
   candidates,
   isLoading,
   canRead,
+  canCreate,
   onSelect,
   onCreate,
 }: CandidateListProps) {
@@ -61,7 +63,7 @@ export function CandidateList({
             <button
               type="button"
               className="btn-primary px-4 py-2 text-sm"
-              disabled={!canRead}
+              disabled={!canCreate}
               onClick={onCreate}
             >
               + Crear candidato

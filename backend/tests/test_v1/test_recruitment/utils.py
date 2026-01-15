@@ -14,10 +14,10 @@ def create_campaign(codigo: str = "CMP1", nombre: str = "Campaign") -> models.Ca
     return models.Campaign.objects.create(codigo=codigo, nombre=nombre)
 
 
-def create_link(
+def create_convocatoria(
     campaign: models.Campaign,
     *,
-    slug: str = "test-link",
+    slug: str = "test-convocatoria",
     owner_id: uuid.UUID | None = None,
     status: str = models.Link.Estado.ACTIVO,
     expires_at=None,
@@ -28,7 +28,7 @@ def create_link(
     data = {
         "campaign": campaign,
         "slug": slug,
-        "titulo": "Test Link",
+        "titulo": "Test Convocatoria",
         "user_id": owner_id,
         "estado": status,
         "expires_at": expires_at,

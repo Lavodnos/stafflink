@@ -5,7 +5,7 @@ import { useParams } from "react-router-dom";
 import { ApiError } from "../lib/apiError";
 import type { PublicCandidatePayload } from "../modules/public/api";
 import { createPublicCandidate } from "../modules/public/api";
-import { usePublicLink } from "../modules/public/hooks";
+import { usePublicConvocatoria } from "../modules/public/hooks";
 import { PublicApplyForm } from "./public/PublicApplyForm";
 import { PublicApplyHeader } from "./public/PublicApplyHeader";
 import { PublicApplySuccess } from "./public/PublicApplySuccess";
@@ -14,8 +14,8 @@ import { getDistritoValue, toUpper } from "./public/utils";
 
 export function PublicApplyPage() {
   const { slug } = useParams<{ slug: string }>();
-  const { data: link, isLoading: loading, error: fetchError } =
-    usePublicLink(slug);
+  const { data: convocatoria, isLoading: loading, error: fetchError } =
+    usePublicConvocatoria(slug);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittedId, setSubmittedId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -47,7 +47,7 @@ export function PublicApplyPage() {
       };
 
       const payload: PublicCandidatePayload = {
-        link_slug: slug,
+        convocatoria_slug: slug,
         ...normalized,
       };
       const resp = await createPublicCandidate(payload);
@@ -102,7 +102,7 @@ export function PublicApplyPage() {
     <main className="min-h-screen bg-gray-50 px-4 py-10 text-gray-900">
       <div className="mx-auto max-w-5xl space-y-8">
         <PublicApplyHeader
-          link={link}
+          convocatoria={convocatoria}
           loading={loading}
           error={fetchError}
         />
@@ -111,7 +111,7 @@ export function PublicApplyPage() {
             {submitError}
           </div>
         )}
-        {link && (
+        {convocatoria && (
           <FormProvider {...form}>
             <PublicApplyForm
               onSubmit={onSubmit}

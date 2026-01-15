@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import type { UseFormReturn } from "react-hook-form";
 
@@ -60,6 +61,60 @@ export function CandidateDetailModal({
   onSubmit,
 }: CandidateDetailModalProps) {
   if (typeof document === "undefined") return null;
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = contentRef.current;
+    if (!container) return;
+
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const getFocusable = () =>
+      Array.from(
+        container.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((el) => !el.hasAttribute("disabled") && !el.getAttribute("aria-hidden"));
+
+    const focusables = getFocusable();
+    const initialFocus = focusables[0] ?? container;
+    initialFocus.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const items = getFocusable();
+      if (items.length === 0) {
+        event.preventDefault();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+
+      if (event.shiftKey) {
+        if (!active || active === first) {
+          event.preventDefault();
+          last.focus();
+        }
+      } else if (active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      if (previousFocus && document.contains(previousFocus)) {
+        previousFocus.focus();
+      }
+    };
+  }, [onClose]);
 
   return createPortal(
     <div
@@ -70,6 +125,8 @@ export function CandidateDetailModal({
     >
       <div
         className="max-h-[85vh] w-full max-w-[1750px] overflow-y-auto"
+        ref={contentRef}
+        tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
       >
         <Card className="space-y-6 rounded-3xl border border-gray-200 bg-white p-6 shadow-2xl lg:p-10 dark:border-slate-800 dark:bg-slate-950">
@@ -86,16 +143,6 @@ export function CandidateDetailModal({
                   ? `${detail.tipo_documento} ${detail.numero_documento}`
                   : "Selecciona un candidato"}
               </p>
-              {detail && (
-                <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-600 dark:text-slate-300">
-                  <span className="pill">
-                    {detail.modalidad || "sin modalidad"}
-                  </span>
-                  {detail.condicion && (
-                    <span className="pill">{detail.condicion}</span>
-                  )}
-                </div>
-              )}
             </div>
             <button
               type="button"

@@ -87,6 +87,34 @@ class IAMClient:
         headers = {"Authorization": f"Bearer {token}"}
         return self._request("GET", f"directory/users/{user_id}/roles", headers=headers)
 
+    def list_users(
+        self,
+        token: str,
+        *,
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Lista usuarios desde IAM Directory."""
+
+        headers = {"Authorization": f"Bearer {token}"}
+        return self._request("GET", "directory/users", headers=headers, params=params)
+
+    def list_roles(
+        self,
+        app_id: str,
+        token: str,
+        *,
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Lista roles de una aplicación en IAM Directory."""
+
+        headers = {"Authorization": f"Bearer {token}"}
+        return self._request(
+            "GET",
+            f"directory/applications/{app_id}/roles",
+            headers=headers,
+            params=params,
+        )
+
     def _request(
         self,
         method: str,
@@ -94,9 +122,12 @@ class IAMClient:
         *,
         json_data: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
+        params: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         url = urljoin(f"{self.base_url}/", path)
         request_kwargs: dict[str, Any] = {"headers": headers}
+        if params:
+            request_kwargs["params"] = params
         if json_data is not None:
             request_kwargs["json"] = json_data
         try:

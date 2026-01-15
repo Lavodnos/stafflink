@@ -26,11 +26,11 @@ def _ensure_not_blacklisted(tipo_documento: str, numero_documento: str) -> None:
         )
 
 
-def _ensure_link_available(link: models.Link) -> None:
+def _ensure_convocatoria_available(link: models.Link) -> None:
     if link.estado != models.Link.Estado.ACTIVO:
-        raise CandidateError("El link no está activo.")
+        raise CandidateError("La convocatoria no está activa.")
     if link.expires_at < timezone.now():
-        raise CandidateError("El link ya venció.")
+        raise CandidateError("La convocatoria ya venció.")
 
 
 def _apply_defaults(link: models.Link, data: dict[str, object]) -> None:
@@ -41,17 +41,31 @@ def _apply_defaults(link: models.Link, data: dict[str, object]) -> None:
 
 
 def _ensure_related(candidate: models.Candidate, actor_id: str | None) -> None:
+    link = candidate.link
     models.CandidateDocuments.objects.get_or_create(candidate=candidate)
     models.CandidateProcess.objects.get_or_create(
         candidate=candidate, defaults={"updated_by": actor_id}
     )
-    models.CandidateAssignment.objects.get_or_create(candidate=candidate)
+    assignment_defaults = {
+        "tipo_contratacion": link.tipo_contratacion,
+        "razon_social": link.razon_social,
+        "remuneracion": link.remuneracion,
+        "bono_variable": link.bono_variable,
+        "bono_movilidad": link.bono_movilidad,
+        "bono_bienvenida": link.bono_bienvenida,
+        "bono_permanencia": link.bono_permanencia,
+        "bono_asistencia": link.bono_asistencia,
+        "cargo_contractual": link.cargo_contractual,
+    }
+    models.CandidateAssignment.objects.get_or_create(
+        candidate=candidate, defaults=assignment_defaults
+    )
 
 
 def create_candidate(
     *, link: models.Link, data: dict[str, object], actor_id: str | None
 ) -> models.Candidate:
-    _ensure_link_available(link)
+    _ensure_convocatoria_available(link)
     doc_type = str(data["tipo_documento"])  # type: ignore[index]
     doc_number = str(data["numero_documento"])  # type: ignore[index]
     numero_documento = validate_document(
@@ -72,7 +86,7 @@ def create_candidate(
             _ensure_related(candidate, actor_id)
     except IntegrityError as exc:
         raise CandidateError(
-            "Ya existe un postulante con ese documento para este link."
+            "Ya existe un postulante con ese documento para esta convocatoria."
         ) from exc
     return candidate
 

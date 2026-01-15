@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { Card, SectionHeader } from "../components/ui";
 import { PageHeader } from "../components/common/PageHeader";
@@ -17,6 +17,7 @@ import type {
   CandidateProcess,
 } from "@/features/candidates";
 import {
+  CANDIDATE_CREATE_ENABLED,
   useCandidate,
   useCandidates,
   useUpdateAssignment,
@@ -56,10 +57,6 @@ const datosSchema = z.object({
   other_experience_time: z.string().optional(),
   enteraste_oferta: z.string().optional(),
   observacion: z.string().optional(),
-  modalidad: z.string().optional(),
-  condicion: z.string().optional(),
-  hora_gestion: z.string().optional(),
-  descanso: z.string().optional(),
 });
 
 const docsSchema = z.object({
@@ -96,15 +93,6 @@ const procesoSchema = z.object({
 });
 
 const contratoSchema = z.object({
-  tipo_contratacion: z.string().optional().nullable(),
-  razon_social: z.string().optional().nullable(),
-  remuneracion: z.coerce.number().optional().nullable(),
-  bono_variable: z.coerce.number().optional().nullable(),
-  bono_movilidad: z.coerce.number().optional().nullable(),
-  bono_bienvenida: z.coerce.number().optional().nullable(),
-  bono_permanencia: z.coerce.number().optional().nullable(),
-  bono_asistencia: z.coerce.number().optional().nullable(),
-  cargo_contractual: z.string().optional().nullable(),
   regimen_pago: z.string().optional().nullable(),
   fecha_inicio: z.string().optional().nullable(),
   fecha_fin: z.string().optional().nullable(),
@@ -118,15 +106,24 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
   const canEditDocs = usePermission("candidates.process");
   const canEditProceso = usePermission("candidates.process");
   const canEditContrato = usePermission("candidates.contract");
+  const canCreate = canEditDatos && CANDIDATE_CREATE_ENABLED;
 
+  const { convocatoriaId } = useParams();
   const [searchParams] = useSearchParams();
-  const linkFilterId = searchParams.get("link_id") ?? undefined;
-  const linkFilterSlug = searchParams.get("link_slug") ?? undefined;
-  const linkFilterTitle = searchParams.get("link_title") ?? undefined;
+  const location = useLocation();
+  const convocatoriaFilterId =
+    convocatoriaId ?? searchParams.get("convocatoria_id") ?? undefined;
+  const state = location.state as
+    | { convocatoriaSlug?: string; convocatoriaTitle?: string }
+    | undefined;
+  const convocatoriaFilterSlug =
+    state?.convocatoriaSlug ?? searchParams.get("convocatoria_slug") ?? undefined;
+  const convocatoriaFilterTitle =
+    state?.convocatoriaTitle ?? searchParams.get("convocatoria_title") ?? undefined;
 
   const { data: list = [], isLoading: listLoading } = useCandidates(
     canRead,
-    linkFilterId,
+    convocatoriaFilterId,
   );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showDetail, setShowDetail] = useState(false);
@@ -246,11 +243,15 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
           title="Ficha, checklist y proceso"
           description="Selecciona un candidato para ver/editar sus datos."
         />
-        {linkFilterId && (
+        {convocatoriaFilterId && (
           <div className="flex flex-wrap items-center gap-3 rounded-xl bg-slate-100 px-3 py-2 text-sm text-slate-700 dark:bg-slate-800/70 dark:text-slate-200">
             <span>
-              Filtrado por link:{" "}
-              <strong>{linkFilterSlug || linkFilterTitle || linkFilterId}</strong>
+              Filtrado por convocatoria:{" "}
+              <strong>
+                {convocatoriaFilterSlug ||
+                  convocatoriaFilterTitle ||
+                  convocatoriaFilterId}
+              </strong>
             </span>
             <button
               type="button"
@@ -268,6 +269,7 @@ export function CandidatesPage({ mode = "list" }: { mode?: Mode }) {
           candidates={list}
           isLoading={listLoading}
           canRead={canRead}
+          canCreate={canCreate}
           onSelect={handleSelectCandidate}
           onCreate={() => navigate("/candidates/new")}
         />

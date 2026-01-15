@@ -52,7 +52,6 @@ export function CandidateDatosForm({
       <Field label="Tipo de documento">
         <Select
           {...register("tipo_documento")}
-          defaultValue={detail.tipo_documento}
           disabled={!canEdit}
         >
           <option value="">Selecciona</option>
@@ -72,14 +71,12 @@ export function CandidateDatosForm({
               }),
           })}
           disabled={!canEdit}
-          defaultValue={detail.numero_documento}
         />
         <ErrorText message={formState.errors.numero_documento?.message} />
       </Field>
       <Field label="Apellidos y nombres">
         <Input
           {...register("nombres_completos")}
-          defaultValue={detail.nombres_completos}
           disabled={!canEdit}
         />
         <ErrorText message={formState.errors.nombres_completos?.message} />
@@ -87,7 +84,6 @@ export function CandidateDatosForm({
       <Field label="Correo">
         <Input
           {...register("email")}
-          defaultValue={detail.email}
           disabled={!canEdit}
         />
         <ErrorText message={formState.errors.email?.message} />
@@ -95,7 +91,6 @@ export function CandidateDatosForm({
       <Field label="Teléfono">
         <Input
           {...register("telefono")}
-          defaultValue={detail.telefono}
           disabled={!canEdit}
         />
         <ErrorText message={formState.errors.telefono?.message} />
@@ -103,7 +98,6 @@ export function CandidateDatosForm({
       <Field label="Teléfono referencia">
         <Input
           {...register("telefono_referencia")}
-          defaultValue={detail.telefono_referencia ?? ""}
           disabled={!canEdit}
         />
       </Field>
@@ -113,7 +107,6 @@ export function CandidateDatosForm({
             type="checkbox"
             className="h-4 w-4"
             {...register("has_callcenter_experience")}
-            defaultChecked={Boolean(detail.has_callcenter_experience)}
             disabled={!canEdit}
           />
           <span className="text-sm text-gray-700 dark:text-gray-200">
@@ -126,7 +119,6 @@ export function CandidateDatosForm({
           <Field label="Tipo de experiencia">
             <Select
               {...register("callcenter_experience_type")}
-              defaultValue={detail.callcenter_experience_type ?? ""}
               disabled={!canEdit}
             >
               <option value="">Selecciona</option>
@@ -140,7 +132,6 @@ export function CandidateDatosForm({
           <Field label="Tiempo de experiencia">
             <Select
               {...register("callcenter_experience_time")}
-              defaultValue={detail.callcenter_experience_time ?? ""}
               disabled={!canEdit}
             >
               <option value="">Selecciona</option>
@@ -157,7 +148,6 @@ export function CandidateDatosForm({
           <Field label="Otra experiencia laboral">
             <Select
               {...register("other_experience_type")}
-              defaultValue={detail.other_experience_type ?? ""}
               disabled={!canEdit}
             >
               <option value="">Selecciona</option>
@@ -171,7 +161,6 @@ export function CandidateDatosForm({
           <Field label="Tiempo de experiencia">
             <Select
               {...register("other_experience_time")}
-              defaultValue={detail.other_experience_time ?? ""}
               disabled={!canEdit}
             >
               <option value="">Selecciona</option>
@@ -187,7 +176,6 @@ export function CandidateDatosForm({
       <Field label="¿Cómo te enteraste de la oferta?">
         <Select
           {...register("enteraste_oferta")}
-          defaultValue={detail.enteraste_oferta ?? ""}
           disabled={!canEdit}
         >
           <option value="">Selecciona</option>
@@ -201,7 +189,6 @@ export function CandidateDatosForm({
       <Field label="Género">
         <Select
           {...register("sexo")}
-          defaultValue={detail.sexo ?? ""}
           disabled={!canEdit}
         >
           <option value="">Selecciona</option>
@@ -216,7 +203,6 @@ export function CandidateDatosForm({
         <Input
           type="date"
           {...register("fecha_nacimiento")}
-          defaultValue={detail.fecha_nacimiento ?? ""}
           disabled={!canEdit}
         />
       </Field>
@@ -224,14 +210,12 @@ export function CandidateDatosForm({
         <Input
           type="number"
           {...register("edad", { valueAsNumber: true })}
-          defaultValue={detail.edad ?? ""}
           disabled={!canEdit}
         />
       </Field>
       <Field label="Estado civil">
         <Select
           {...register("estado_civil")}
-          defaultValue={detail.estado_civil ?? ""}
           disabled={!canEdit}
         >
           <option value="">Selecciona</option>
@@ -246,14 +230,12 @@ export function CandidateDatosForm({
         <Input
           type="number"
           {...register("numero_hijos", { valueAsNumber: true })}
-          defaultValue={detail.numero_hijos ?? ""}
           disabled={!canEdit}
         />
       </Field>
       <Field label="Nivel académico">
         <Select
           {...register("nivel_academico")}
-          defaultValue={detail.nivel_academico ?? ""}
           disabled={!canEdit}
         >
           <option value="">Selecciona</option>
@@ -267,14 +249,12 @@ export function CandidateDatosForm({
       <Field label="Carrera">
         <Input
           {...register("carrera")}
-          defaultValue={detail.carrera ?? ""}
           disabled={!canEdit}
         />
       </Field>
       <Field label="Nacionalidad">
         <Select
           {...register("nacionalidad")}
-          defaultValue={detail.nacionalidad ?? ""}
           disabled={!canEdit}
         >
           <option value="">Selecciona</option>
@@ -288,7 +268,6 @@ export function CandidateDatosForm({
       <Field label="Lugar de residencia">
         <Select
           {...register("lugar_residencia")}
-          defaultValue={detail.lugar_residencia ?? ""}
           disabled={!canEdit}
         >
           <option value="">Selecciona</option>
@@ -302,7 +281,6 @@ export function CandidateDatosForm({
       <Field label="Distrito">
         <Select
           {...register("distrito")}
-          defaultValue={detail.distrito ?? ""}
           disabled={!canEdit}
         >
           <option value="">Selecciona</option>
@@ -319,35 +297,6 @@ export function CandidateDatosForm({
       <Field label="Dirección de domicilio">
         <Input
           {...register("direccion")}
-          defaultValue={detail.direccion ?? ""}
-          disabled={!canEdit}
-        />
-      </Field>
-      <Field label="Modalidad (copia)">
-        <Input
-          {...register("modalidad")}
-          defaultValue={detail.modalidad ?? ""}
-          disabled={!canEdit}
-        />
-      </Field>
-      <Field label="Condición (copia)">
-        <Input
-          {...register("condicion")}
-          defaultValue={detail.condicion ?? ""}
-          disabled={!canEdit}
-        />
-      </Field>
-      <Field label="Hora de gestión">
-        <Input
-          {...register("hora_gestion")}
-          defaultValue={detail.hora_gestion ?? ""}
-          disabled={!canEdit}
-        />
-      </Field>
-      <Field label="Descanso">
-        <Input
-          {...register("descanso")}
-          defaultValue={detail.descanso ?? ""}
           disabled={!canEdit}
         />
       </Field>
@@ -355,7 +304,6 @@ export function CandidateDatosForm({
         <Field label="Observación">
           <Textarea
             {...register("observacion")}
-            defaultValue={detail.observacion ?? ""}
             disabled={!canEdit}
           />
         </Field>

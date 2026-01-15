@@ -2,10 +2,17 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
-import { CampaignsPage } from './pages/CampaignsPage';
-import { BlacklistPage } from './pages/BlacklistPage';
-import { LinksPage } from './pages/LinksPage';
-import { CandidatesPage } from './pages/CandidatesPage';
+import { CampaignsListPage } from './pages/campaigns/CampaignsListPage';
+import { CampaignCreatePage } from './pages/campaigns/CampaignCreatePage';
+import { CampaignEditPage } from './pages/campaigns/CampaignEditPage';
+import { BlacklistListPage } from './pages/blacklist/BlacklistListPage';
+import { BlacklistCreatePage } from './pages/blacklist/BlacklistCreatePage';
+import { ConvocatoriasListPage } from './pages/convocatorias/ConvocatoriasListPage';
+import { ConvocatoriaCreatePage } from './pages/convocatorias/ConvocatoriaCreatePage';
+import { ConvocatoriaEditPage } from './pages/convocatorias/ConvocatoriaEditPage';
+import { ConvocatoriaPostulantesPage } from './pages/convocatorias/ConvocatoriaPostulantesPage';
+import { CandidatesListPage } from './pages/candidates/CandidatesListPage';
+import { CandidateCreatePage } from './pages/candidates/CandidateCreatePage';
 import { PublicApplyPage } from './pages/PublicApplyPage';
 import { ForbiddenPage } from './pages/ForbiddenPage';
 import { RequireAuth } from './routes/RequireAuth';
@@ -33,7 +40,7 @@ function App() {
             path="/campaigns"
             element={(
               <RequirePermission required="campaigns.read">
-                <CampaignsPage />
+                <CampaignsListPage />
               </RequirePermission>
             )}
           />
@@ -41,7 +48,7 @@ function App() {
             path="/campaigns/new"
             element={(
               <RequirePermission required="campaigns.manage">
-                <CampaignsPage mode="create" />
+                <CampaignCreatePage />
               </RequirePermission>
             )}
           />
@@ -49,39 +56,39 @@ function App() {
             path="/campaigns/:id/edit"
             element={(
               <RequirePermission required="campaigns.manage">
-                <CampaignsPage mode="create" />
+                <CampaignEditPage />
               </RequirePermission>
             )}
           />
           <Route
-            path="/links"
+            path="/convocatorias"
             element={(
-              <RequirePermission required="links.read">
-                <LinksPage />
+              <RequirePermission required="convocatorias.read">
+                <ConvocatoriasListPage />
               </RequirePermission>
             )}
           />
           <Route
-            path="/links/new"
+            path="/convocatorias/new"
             element={(
-              <RequirePermission required="links.manage">
-                <LinksPage mode="create" />
+              <RequirePermission required="convocatorias.manage">
+                <ConvocatoriaCreatePage />
               </RequirePermission>
             )}
           />
           <Route
-            path="/links/:id/edit"
+            path="/convocatorias/:id/edit"
             element={(
-              <RequirePermission required="links.manage">
-                <LinksPage mode="create" />
+              <RequirePermission required="convocatorias.manage">
+                <ConvocatoriaEditPage />
               </RequirePermission>
             )}
           />
           <Route
-            path="/links/:linkId/candidates"
+            path="/convocatorias/:convocatoriaId/postulantes"
             element={(
               <RequirePermission required="candidates.read">
-                <CandidatesPage />
+                <ConvocatoriaPostulantesPage />
               </RequirePermission>
             )}
           />
@@ -89,7 +96,7 @@ function App() {
             path="/candidates"
             element={(
               <RequirePermission required="candidates.read">
-                <CandidatesPage />
+                <CandidatesListPage />
               </RequirePermission>
             )}
           />
@@ -97,7 +104,7 @@ function App() {
             path="/candidates/new"
             element={(
               <RequirePermission required="candidates.manage">
-                <CandidatesPage mode="create" />
+                <CandidateCreatePage />
               </RequirePermission>
             )}
           />
@@ -105,7 +112,7 @@ function App() {
             path="/blacklist"
             element={(
               <RequirePermission required="blacklist.read">
-                <BlacklistPage />
+                <BlacklistListPage />
               </RequirePermission>
             )}
           />
@@ -113,7 +120,7 @@ function App() {
             path="/blacklist/new"
             element={(
               <RequirePermission required="blacklist.manage">
-                <BlacklistPage mode="create" />
+                <BlacklistCreatePage />
               </RequirePermission>
             )}
           />

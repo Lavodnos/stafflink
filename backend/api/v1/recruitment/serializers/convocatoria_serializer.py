@@ -5,10 +5,10 @@ from rest_framework import serializers
 from .. import models
 from ..request_context import get_user_id, get_user_name
 from ..serializers.campaign_serializer import CampaignSerializer
-from ..services import link_service
+from ..services import convocatoria_service
 
 
-class LinkSerializer(serializers.ModelSerializer):
+class ConvocatoriaSerializer(serializers.ModelSerializer):
     campaign = serializers.PrimaryKeyRelatedField(
         queryset=models.Campaign.objects.all()
     )
@@ -21,6 +21,7 @@ class LinkSerializer(serializers.ModelSerializer):
             "grupo",
             "user_id",
             "user_name",
+            "encargados",
             "periodo",
             "slug",
             "titulo",
@@ -33,6 +34,16 @@ class LinkSerializer(serializers.ModelSerializer):
             "estado",
             "hora_gestion",
             "descanso",
+            "tipo_contratacion",
+            "razon_social",
+            "remuneracion",
+            "bono_variable",
+            "bono_movilidad",
+            "bono_bienvenida",
+            "bono_permanencia",
+            "bono_asistencia",
+            "cargo_contractual",
+            "pago_capacitacion",
             "created_at",
             "updated_at",
         ]
@@ -42,21 +53,21 @@ class LinkSerializer(serializers.ModelSerializer):
         request = self.context["request"]
         actor_id = get_user_id(request)
         actor_name = get_user_name(request)
-        return link_service.create_link(
+        return convocatoria_service.create_convocatoria(
             data=validated_data, actor_id=actor_id, actor_name=actor_name
         )
 
     def update(self, instance, validated_data):
         request = self.context["request"]
         actor_id = get_user_id(request)
-        return link_service.update_link(
-            link=instance, data=validated_data, actor_id=actor_id
+        return convocatoria_service.update_convocatoria(
+            convocatoria=instance, data=validated_data, actor_id=actor_id
         )
 
 
-class LinkDetailSerializer(LinkSerializer):
+class ConvocatoriaDetailSerializer(ConvocatoriaSerializer):
     campaign = CampaignSerializer(read_only=True)
 
 
-class LinkActionSerializer(serializers.Serializer):
+class ConvocatoriaActionSerializer(serializers.Serializer):
     motivo = serializers.CharField(required=False, allow_blank=True)

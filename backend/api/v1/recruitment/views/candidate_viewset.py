@@ -39,11 +39,11 @@ class CandidateViewSet(viewsets.ModelViewSet):
             qs = qs.filter(numero_documento__iexact=document.strip())
         if campaign_id := params.get("campaign_id"):
             qs = qs.filter(link__campaign_id=campaign_id)
-        if link_id := params.get("link_id"):
-            qs = qs.filter(link_id=link_id)
+        if convocatoria_id := params.get("convocatoria_id"):
+            qs = qs.filter(link_id=convocatoria_id)
         if grupo := params.get("grupo"):
             qs = qs.filter(link__grupo__iexact=grupo.strip())
-        # Si no tiene permisos globales, limitar a links del usuario
+        # Si no tiene permisos globales, limitar a convocatorias del usuario
         if not self.request or not self.request.auth:
             return qs
         if not self.request.auth or not hasattr(self.request, "auth"):

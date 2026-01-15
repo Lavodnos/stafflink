@@ -228,6 +228,10 @@ IAM_CONTROL_APP_ID = os.environ.get(
     "ed9ca85c-8247-4043-9fd2-d1c47497f461",
 )
 IAM_TIMEOUT_SECONDS = float(os.environ.get("IAM_TIMEOUT_SECONDS", "10"))
+IAM_AGENT_ROLE_ID = os.environ.get("IAM_AGENT_ROLE_ID")
+IAM_RECRUITER_ROLE_NAME = os.environ.get(
+    "IAM_RECRUITER_ROLE_NAME", "stafflink_recruiter"
+)
 IAM_CAPTCHA_REQUIRED = _env_bool(os.environ.get("IAM_CAPTCHA_REQUIRED"), default=False)
 IAM_SERVICE_TOKEN = os.environ.get(
     "IAM_SERVICE_TOKEN"

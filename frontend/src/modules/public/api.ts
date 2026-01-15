@@ -1,6 +1,6 @@
 import { apiClient } from '../../lib/apiClient';
 
-export type PublicLink = {
+export type PublicConvocatoria = {
   id: string;
   titulo: string;
   slug: string;
@@ -15,7 +15,7 @@ export type PublicLink = {
 };
 
 export type PublicCandidatePayload = {
-  link_slug: string;
+  convocatoria_slug: string;
   tipo_documento: string;
   numero_documento: string;
   apellido_paterno: string;
@@ -44,8 +44,10 @@ export type PublicCandidatePayload = {
   observacion?: string;
 };
 
-export async function fetchPublicLink(slug: string): Promise<PublicLink> {
-  return apiClient<PublicLink>(`/v1/public/links/${slug}`);
+export async function fetchPublicConvocatoria(
+  slug: string,
+): Promise<PublicConvocatoria> {
+  return apiClient<PublicConvocatoria>(`/v1/public/convocatorias/${slug}`);
 }
 
 export async function createPublicCandidate(

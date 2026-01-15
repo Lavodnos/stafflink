@@ -26,7 +26,10 @@ export function CandidateDocumentsForm({
     <form className="grid gap-4 md:grid-cols-3" onSubmit={handleSubmit(onSubmit)}>
       <Field label="CV entregado">
         <Select
-          {...register("cv_entregado")}
+          {...register("cv_entregado", {
+            setValueAs: (value) =>
+              value === "" ? undefined : value === "true",
+          })}
           defaultValue={String(detail.documents?.cv_entregado ?? "")}
           disabled={!canEdit}
         >
@@ -37,7 +40,10 @@ export function CandidateDocumentsForm({
       </Field>
       <Field label="DNI entregado">
         <Select
-          {...register("dni_entregado")}
+          {...register("dni_entregado", {
+            setValueAs: (value) =>
+              value === "" ? undefined : value === "true",
+          })}
           defaultValue={String(detail.documents?.dni_entregado ?? "")}
           disabled={!canEdit}
         >
@@ -48,7 +54,10 @@ export function CandidateDocumentsForm({
       </Field>
       <Field label="Certificado">
         <Select
-          {...register("certificado_entregado")}
+          {...register("certificado_entregado", {
+            setValueAs: (value) =>
+              value === "" ? undefined : value === "true",
+          })}
           defaultValue={String(detail.documents?.certificado_entregado ?? "")}
           disabled={!canEdit}
         >
@@ -59,7 +68,10 @@ export function CandidateDocumentsForm({
       </Field>
       <Field label="Recibo servicio">
         <Select
-          {...register("recibo_servicio_entregado")}
+          {...register("recibo_servicio_entregado", {
+            setValueAs: (value) =>
+              value === "" ? undefined : value === "true",
+          })}
           defaultValue={String(detail.documents?.recibo_servicio_entregado ?? "")}
           disabled={!canEdit}
         >
@@ -70,7 +82,10 @@ export function CandidateDocumentsForm({
       </Field>
       <Field label="Ficha de datos">
         <Select
-          {...register("ficha_datos_entregado")}
+          {...register("ficha_datos_entregado", {
+            setValueAs: (value) =>
+              value === "" ? undefined : value === "true",
+          })}
           defaultValue={String(detail.documents?.ficha_datos_entregado ?? "")}
           disabled={!canEdit}
         >
@@ -81,7 +96,10 @@ export function CandidateDocumentsForm({
       </Field>
       <Field label="Autorización de datos">
         <Select
-          {...register("autorizacion_datos_entregado")}
+          {...register("autorizacion_datos_entregado", {
+            setValueAs: (value) =>
+              value === "" ? undefined : value === "true",
+          })}
           defaultValue={String(
             detail.documents?.autorizacion_datos_entregado ?? "",
           )}

@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
-import cn from 'clsx';
-import { useAuth } from '../../modules/auth/useAuth';
-import { IAM_SECURITY_URL } from '../../config';
+import { useEffect, useRef, useState } from "react";
+import cn from "clsx";
+import { useAuth } from "../modules/auth/useAuth";
+import { IAM_SECURITY_URL } from "../config";
 
 export function UserMenu() {
   const { user, logout } = useAuth();
@@ -10,11 +10,12 @@ export function UserMenu() {
   const menuRef = useRef<HTMLDivElement>(null);
 
   const initials =
-    (user?.first_name?.[0] || '') + (user?.last_name?.[0] || user?.email?.[0] || '').toUpperCase();
+    (user?.first_name?.[0] || "") +
+    (user?.last_name?.[0] || user?.email?.[0] || "").toUpperCase();
 
   const displayName = (() => {
-    const fullName = `${user?.first_name ?? ''} ${user?.last_name ?? ''}`.trim();
-    return fullName || user?.username || user?.email || user?.id || 'Usuario';
+    const fullName = `${user?.first_name ?? ""} ${user?.last_name ?? ""}`.trim();
+    return fullName || user?.username || user?.email || user?.id || "Usuario";
   })();
 
   const handleLogout = async () => {
@@ -29,18 +30,18 @@ export function UserMenu() {
   useEffect(() => {
     if (!open) return;
     const onKey = (ev: KeyboardEvent) => {
-      if (ev.key === 'Escape') setOpen(false);
+      if (ev.key === "Escape") setOpen(false);
     };
     const onClickOutside = (ev: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(ev.target as Node)) {
         setOpen(false);
       }
     };
-    window.addEventListener('keydown', onKey);
-    window.addEventListener('mousedown', onClickOutside);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("mousedown", onClickOutside);
     return () => {
-      window.removeEventListener('keydown', onKey);
-      window.removeEventListener('mousedown', onClickOutside);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("mousedown", onClickOutside);
     };
   }, [open]);
 
@@ -55,7 +56,7 @@ export function UserMenu() {
         aria-expanded={open}
       >
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-500 text-white shadow-theme-xs">
-          {initials || 'U'}
+          {initials || "U"}
         </span>
         <span className="hidden sm:block">{displayName}</span>
       </button>
@@ -67,7 +68,9 @@ export function UserMenu() {
           aria-label="Opciones de usuario"
         >
           <div className="rounded-lg px-3 py-2 text-xs text-gray-500 dark:text-gray-300">
-            <p className="font-semibold text-gray-900 dark:text-white">{displayName}</p>
+            <p className="font-semibold text-gray-900 dark:text-white">
+              {displayName}
+            </p>
             {user?.username && <p className="truncate">{user.username}</p>}
             {user?.email && <p className="truncate">{user.email}</p>}
           </div>
@@ -83,14 +86,14 @@ export function UserMenu() {
           <button
             type="button"
             className={cn(
-              'mt-1 w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-800 transition hover:bg-gray-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500/30 dark:text-white dark:hover:bg-gray-800',
-              loading && 'opacity-60',
+              "mt-1 w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-800 transition hover:bg-gray-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500/30 dark:text-white dark:hover:bg-gray-800",
+              loading && "opacity-60",
             )}
             onClick={handleLogout}
             disabled={loading}
             role="menuitem"
           >
-            {loading ? 'Cerrando sesión…' : 'Cerrar sesión'}
+            {loading ? "Cerrando sesión…" : "Cerrar sesión"}
           </button>
         </div>
       )}

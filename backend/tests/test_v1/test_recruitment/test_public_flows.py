@@ -8,31 +8,35 @@ from rest_framework.test import APITestCase
 
 from api.v1.recruitment import models
 
-from .utils import create_campaign, create_link
+from .utils import create_campaign, create_convocatoria
 
 
 class PublicFlowTests(APITestCase):
     def setUp(self) -> None:
         self.campaign = create_campaign()
-        self.link = create_link(
+        self.link = create_convocatoria(
             self.campaign,
             slug="open-link",
             expires_at=timezone.now() + timedelta(days=1),
         )
 
     def test_public_link_rejects_expired(self) -> None:
-        expired_link = create_link(
+        expired_link = create_convocatoria(
             self.campaign,
             slug="expired-link",
             expires_at=timezone.now() - timedelta(minutes=1),
             status=models.Link.Estado.EXPIRADO,
         )
-        url = reverse("public:public-link", kwargs={"slug": expired_link.slug})
+        url = reverse(
+            "public:public-convocatoria", kwargs={"slug": expired_link.slug}
+        )
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
     def test_public_link_returns_active(self) -> None:
-        url = reverse("public:public-link", kwargs={"slug": self.link.slug})
+        url = reverse(
+            "public:public-convocatoria", kwargs={"slug": self.link.slug}
+        )
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -42,7 +46,7 @@ class PublicFlowTests(APITestCase):
     def test_create_candidate_with_valid_link(self) -> None:
         url = reverse("public:public-candidate")
         payload = {
-            "link_slug": self.link.slug,
+            "convocatoria_slug": self.link.slug,
             "tipo_documento": models.Candidate.DocumentType.DNI,
             "numero_documento": "87654321",
             "apellido_paterno": "LOPEZ",
@@ -61,7 +65,7 @@ class PublicFlowTests(APITestCase):
     def test_create_candidate_with_invalid_link(self) -> None:
         url = reverse("public:public-candidate")
         payload = {
-            "link_slug": "no-existe",
+            "convocatoria_slug": "no-existe",
             "tipo_documento": models.Candidate.DocumentType.DNI,
             "numero_documento": "1234",
             "apellido_paterno": "X",

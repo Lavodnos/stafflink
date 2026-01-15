@@ -124,7 +124,7 @@ export function CandidateProcesoForm({
           }
         />
       </Field>
-      <Field label="Pago capacitación">
+      <Field label="Pago de capacitación">
         <Input
           type="datetime-local"
           {...register("pago_capacitacion_at")}

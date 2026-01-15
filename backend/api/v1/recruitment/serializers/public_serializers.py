@@ -9,7 +9,7 @@ from ..services import candidate_service
 from ..services.exceptions import CandidateError
 
 
-class PublicLinkSerializer(serializers.ModelSerializer):
+class PublicConvocatoriaSerializer(serializers.ModelSerializer):
     campaign = serializers.CharField(source="campaign.nombre")
 
     class Meta:
@@ -30,13 +30,13 @@ class PublicLinkSerializer(serializers.ModelSerializer):
 
 
 class PublicCandidateSerializer(serializers.ModelSerializer):
-    link_slug = serializers.SlugField(write_only=True)
+    convocatoria_slug = serializers.SlugField(write_only=True)
 
     class Meta:
         model = models.Candidate
         fields = [
             "id",
-            "link_slug",
+            "convocatoria_slug",
             "tipo_documento",
             "numero_documento",
             "apellido_paterno",
@@ -80,17 +80,17 @@ class PublicCandidateSerializer(serializers.ModelSerializer):
             "updated_at",
         )
 
-    def validate_link_slug(self, value: str) -> str:
-        link = self._get_active_link(value)
-        self.context["link"] = link
+    def validate_convocatoria_slug(self, value: str) -> str:
+        convocatoria = self._get_active_convocatoria(value)
+        self.context["convocatoria"] = convocatoria
         return value
 
     def create(self, validated_data):
-        link = self.context["link"]
-        validated_data.pop("link_slug", None)
+        convocatoria = self.context["convocatoria"]
+        validated_data.pop("convocatoria_slug", None)
         try:
             return candidate_service.create_candidate(
-                link=link, data=validated_data, actor_id=None
+                link=convocatoria, data=validated_data, actor_id=None
             )
         except CandidateError as exc:
             # Si viene con campo específico, devolver formato DRF estándar
@@ -100,14 +100,20 @@ class PublicCandidateSerializer(serializers.ModelSerializer):
             non_field = api_settings.NON_FIELD_ERRORS_KEY
             raise serializers.ValidationError({non_field: [str(exc)]})
 
-    def _get_active_link(self, slug: str) -> models.Link:
+    def _get_active_convocatoria(self, slug: str) -> models.Link:
         now = timezone.now()
         try:
-            link = models.Link.objects.select_related("campaign").get(slug=slug)
+            convocatoria = models.Link.objects.select_related("campaign").get(slug=slug)
         except models.Link.DoesNotExist as exc:
-            raise serializers.ValidationError({"link_slug": ["Link no encontrado"]}) from exc
-        if link.estado != models.Link.Estado.ACTIVO:
-            raise serializers.ValidationError({"link_slug": ["El link no está activo"]})
-        if link.expires_at < now:
-            raise serializers.ValidationError({"link_slug": ["El link ya venció"]})
-        return link
+            raise serializers.ValidationError(
+                {"convocatoria_slug": ["Convocatoria no encontrada"]}
+            ) from exc
+        if convocatoria.estado != models.Link.Estado.ACTIVO:
+            raise serializers.ValidationError(
+                {"convocatoria_slug": ["La convocatoria no está activa"]}
+            )
+        if convocatoria.expires_at < now:
+            raise serializers.ValidationError(
+                {"convocatoria_slug": ["La convocatoria ya venció"]}
+            )
+        return convocatoria

@@ -1,12 +1,13 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSidebar } from "../context/SidebarContext";
 import { ThemeToggle } from "../components/common/ThemeToggle";
-import { UserMenu } from "../components/layout/UserMenu";
+import { UserMenu } from "./UserMenu";
 
 const AppHeader: React.FC = () => {
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -84,6 +85,21 @@ const AppHeader: React.FC = () => {
                 ref={inputRef}
                 type="text"
                 placeholder="Search or type command..."
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key !== "Enter") return;
+                  event.preventDefault();
+                  if (!searchTerm.trim()) return;
+                  window.dispatchEvent(
+                    new CustomEvent("app:toast", {
+                      detail: {
+                        message: "La búsqueda global está en preparación.",
+                        type: "info",
+                      },
+                    }),
+                  );
+                }}
                 className="shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-700 h-11 w-[320px] rounded-lg border border-gray-200 bg-white py-2.5 pr-4 pl-12 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
               />
             </div>

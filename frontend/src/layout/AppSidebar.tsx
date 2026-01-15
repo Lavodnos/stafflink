@@ -9,24 +9,50 @@ import {
   HorizontaLDots,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
+import { usePermission } from "../modules/auth/usePermission";
 
 type NavItem = {
   name: string;
   icon: React.ReactNode;
   path: string;
   badge?: string;
+  allowed: boolean;
 };
-
-const navItems: NavItem[] = [
-  { name: "Dashboard", icon: <GridIcon />, path: "/" },
-  { name: "Campañas", icon: <CalenderIcon />, path: "/campaigns" },
-  { name: "Links", icon: <PlugInIcon />, path: "/links" },
-  { name: "Candidatos", icon: <UserCircleIcon />, path: "/candidates" },
-  { name: "Blacklist", icon: <ListIcon />, path: "/blacklist" },
-];
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, setIsHovered } = useSidebar();
+  const canReadCampaigns = usePermission("campaigns.read");
+  const canReadConvocatorias = usePermission("convocatorias.read");
+  const canReadCandidates = usePermission("candidates.read");
+  const canReadBlacklist = usePermission("blacklist.read");
+
+  const navItems: NavItem[] = [
+    { name: "Dashboard", icon: <GridIcon />, path: "/", allowed: true },
+    {
+      name: "Campañas",
+      icon: <CalenderIcon />,
+      path: "/campaigns",
+      allowed: canReadCampaigns,
+    },
+    {
+      name: "Convocatorias",
+      icon: <PlugInIcon />,
+      path: "/convocatorias",
+      allowed: canReadConvocatorias,
+    },
+    {
+      name: "Candidatos",
+      icon: <UserCircleIcon />,
+      path: "/candidates",
+      allowed: canReadCandidates,
+    },
+    {
+      name: "Blacklist",
+      icon: <ListIcon />,
+      path: "/blacklist",
+      allowed: canReadBlacklist,
+    },
+  ];
 
   return (
     <>
@@ -63,7 +89,7 @@ const AppSidebar: React.FC = () => {
         </div>
 
         <nav className="flex-1 space-y-1">
-          {navItems.map((item) => (
+          {navItems.filter((item) => item.allowed).map((item) => (
             <NavLink
               key={item.path}
               to={item.path}

@@ -18,10 +18,12 @@ import {
 
 const candidatesKey = ['candidates'];
 
-export function useCandidates(enabled = true, linkId?: string) {
+export function useCandidates(enabled = true, convocatoriaId?: string) {
   return useQuery({
-    queryKey: linkId ? [...candidatesKey, { linkId }] : candidatesKey,
-    queryFn: () => fetchCandidates(linkId),
+    queryKey: convocatoriaId
+      ? [...candidatesKey, { convocatoriaId }]
+      : candidatesKey,
+    queryFn: () => fetchCandidates(convocatoriaId),
     enabled,
   });
 }
@@ -78,4 +80,3 @@ export function useUpdateAssignment() {
     },
   });
 }
-

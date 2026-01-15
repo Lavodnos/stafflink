@@ -1,8 +1,8 @@
 import geaLogo from "../../assets/gea-logo.svg";
-import type { PublicLink } from "../../modules/public/api";
+import type { PublicConvocatoria } from "../../modules/public/api";
 
 type PublicApplyHeaderProps = {
-  link?: PublicLink | null;
+  convocatoria?: PublicConvocatoria | null;
   loading: boolean;
   error?: string | null;
 };
@@ -12,18 +12,24 @@ const formatter = new Intl.DateTimeFormat("es-PE", {
   timeStyle: "short",
 });
 
+const formatExpiresAt = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return formatter.format(date);
+};
+
 export function PublicApplyHeader({
-  link,
+  convocatoria,
   loading,
   error,
 }: PublicApplyHeaderProps) {
   if (loading) {
-    return <p className="text-slate-500">Cargando link…</p>;
+    return <p className="text-slate-500">Cargando convocatoria…</p>;
   }
   if (error) {
     return <p className="text-red-600">{error}</p>;
   }
-  if (!link) return null;
+  if (!convocatoria) return null;
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-theme-lg">
@@ -34,21 +40,22 @@ export function PublicApplyHeader({
         <div className="space-y-2">
           <p className="text-sm font-medium text-slate-500">Campaña</p>
           <h1 className="text-3xl font-semibold text-slate-900">
-            {link.titulo}
+            {convocatoria.titulo}
           </h1>
           <div className="flex flex-wrap gap-2 text-sm">
-            <span className="pill">{link.campaign}</span>
-            <span className="pill">{link.modalidad}</span>
-            <span className="pill">{link.condicion}</span>
-            {link.hora_gestion && (
-              <span className="pill">Horario: {link.hora_gestion}</span>
+            <span className="pill">{convocatoria.campaign}</span>
+            <span className="pill">{convocatoria.modalidad}</span>
+            <span className="pill">{convocatoria.condicion}</span>
+            {convocatoria.hora_gestion && (
+              <span className="pill">Horario: {convocatoria.hora_gestion}</span>
             )}
-            {link.descanso && (
-              <span className="pill">Descanso: {link.descanso}</span>
+            {convocatoria.descanso && (
+              <span className="pill">Descanso: {convocatoria.descanso}</span>
             )}
           </div>
           <p className="text-sm text-slate-500">
-            Link vigente hasta {formatter.format(new Date(link.expires_at))}
+            Convocatoria vigente hasta{" "}
+            {formatExpiresAt(convocatoria.expires_at)}
           </p>
         </div>
       </div>

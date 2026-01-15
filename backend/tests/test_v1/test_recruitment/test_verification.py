@@ -9,14 +9,14 @@ from rest_framework.test import APITestCase
 
 from api.v1.recruitment import models
 
-from .utils import create_applicant, create_campaign, create_link
+from .utils import create_applicant, create_campaign, create_convocatoria
 
 
 @unittest.skip("Flujo de verificación legacy no alineado con modelo/proceso actual")
 class VerificationViewSetTests(APITestCase):
     def setUp(self) -> None:
         self.campaign = create_campaign()
-        self.link = create_link(self.campaign, owner_id=uuid.uuid4())
+        self.link = create_convocatoria(self.campaign, owner_id=uuid.uuid4())
         self.applicant = create_applicant(
             self.link,
             status="submitted",

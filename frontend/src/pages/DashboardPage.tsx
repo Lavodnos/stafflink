@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import Chart from 'react-apexcharts';
 import type { ApexOptions } from 'apexcharts';
-import { useLinks } from '@/features/links';
+import { useConvocatorias } from '@/features/convocatorias';
 import { useCampaigns } from '@/features/campaigns';
 import {
   useCandidates,
@@ -16,28 +16,19 @@ import { useThemeMode } from '../hooks/useThemeMode';
 import { StatCard } from '../components/common/StatCard';
 import { ChartCard } from '../components/common/ChartCard';
 
-export function DashboardPage() {
-  const canReadCampaigns = usePermission('campaigns.read');
-  const canReadLinks = usePermission('links.read');
-  const canReadCandidates = usePermission('candidates.read');
-  const canReadBlacklist = usePermission('blacklist.read');
+type DashboardMetrics = {
+  funnelCounts: { total: number; docsCompletos: number; aptos: number; contratados: number };
+  canalSeries: { labels: string[]; data: number[] };
+  docsPorCampana: { labels: string[]; data: number[] };
+  contratadosPorCampana: { labels: string[]; dataContratados: number[]; dataPendientes: number[] };
+};
 
-  const { data: campaigns = [] } = useCampaigns(canReadCampaigns);
-  const { data: links = [] } = useLinks(canReadLinks);
-  const { data: candidates = [] } = useCandidates(canReadCandidates);
-  const { data: blacklist = [] } = useBlacklist(canReadBlacklist);
-
-  const { isDark } = useThemeMode();
-
-  const summary = [
-    { title: 'Campañas', value: campaigns.length, to: '/campaigns' },
-    { title: 'Links', value: links.length, to: '/links' },
-    { title: 'Candidatos', value: candidates.length, to: '/candidates' },
-    { title: 'Blacklist', value: blacklist.length, to: '/blacklist' },
-  ];
-
-  // --------- Métricas derivadas ---------
-  const funnelCounts = useMemo(() => {
+function buildDashboardMetrics(
+  candidates: Candidate[],
+  convocatorias: { id: string; campaign: string }[],
+  campaigns: { id: string; nombre: string }[],
+): DashboardMetrics {
+  const funnelCounts = (() => {
     const total = candidates.length;
     const docsCompletos = candidates.filter((c) => {
       const d = (c as Candidate & { documents?: CandidateDocuments }).documents ?? {};
@@ -67,9 +58,9 @@ export function DashboardPage() {
     }).length;
 
     return { total, docsCompletos, aptos, contratados };
-  }, [candidates]);
+  })();
 
-  const canalSeries = useMemo(() => {
+  const canalSeries = (() => {
     const counts = new Map<string, number>();
     candidates.forEach((c) => {
       const key = (c.enteraste_oferta ?? 'No especificado').trim();
@@ -80,18 +71,18 @@ export function DashboardPage() {
       labels: entries.map(([k]) => k),
       data: entries.map(([, v]) => v),
     };
-  }, [candidates]);
+  })();
 
-  const docsPorCampana = useMemo(() => {
-    const linkById = new Map(links.map((l) => [l.id, l] as const));
+  const docsPorCampana = (() => {
+    const convocatoriaById = new Map(convocatorias.map((c) => [c.id, c] as const));
     const campById = new Map(campaigns.map((c) => [c.id, c] as const));
 
     const stats = new Map<string, { nombre: string; total: number; completos: number }>();
 
     candidates.forEach((c) => {
-      const link = linkById.get(c.link_id);
-      if (!link) return;
-      const camp = campById.get(link.campaign);
+      const convocatoria = convocatoriaById.get(c.convocatoria_id);
+      if (!convocatoria) return;
+      const camp = campById.get(convocatoria.campaign);
       const key = camp?.id ?? 'desconocida';
       const nombre = camp?.nombre ?? 'Sin campaña';
       const item = stats.get(key) ?? { nombre, total: 0, completos: 0 };
@@ -111,12 +102,14 @@ export function DashboardPage() {
     });
 
     const labels = Array.from(stats.values()).map((s) => s.nombre);
-    const data = Array.from(stats.values()).map((s) => (s.total ? Math.round((s.completos / s.total) * 100) : 0));
+    const data = Array.from(stats.values()).map((s) =>
+      s.total ? Math.round((s.completos / s.total) * 100) : 0,
+    );
     return { labels, data };
-  }, [candidates, links, campaigns]);
+  })();
 
-  const contratadosPorCampana = useMemo(() => {
-    const linkById = new Map(links.map((l) => [l.id, l] as const));
+  const contratadosPorCampana = (() => {
+    const convocatoriaById = new Map(convocatorias.map((c) => [c.id, c] as const));
     const campById = new Map(campaigns.map((c) => [c.id, c] as const));
     const now = new Date();
     const windowStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -128,8 +121,8 @@ export function DashboardPage() {
       const created = new Date(c.created_at);
       if (created < windowStart) return;
 
-      const link = linkById.get(c.link_id);
-      const camp = link ? campById.get(link.campaign) : undefined;
+      const convocatoria = convocatoriaById.get(c.convocatoria_id);
+      const camp = convocatoria ? campById.get(convocatoria.campaign) : undefined;
       const key = camp?.id ?? 'desconocida';
       const nombre = camp?.nombre ?? 'Sin campaña';
       const item = stats.get(key) ?? { nombre, contratados: 0, pendientes: 0 };
@@ -149,7 +142,37 @@ export function DashboardPage() {
     const dataContratados = Array.from(stats.values()).map((s) => s.contratados);
     const dataPendientes = Array.from(stats.values()).map((s) => s.pendientes);
     return { labels, dataContratados, dataPendientes };
-  }, [candidates, links, campaigns]);
+  })();
+
+  return { funnelCounts, canalSeries, docsPorCampana, contratadosPorCampana };
+}
+
+export function DashboardPage() {
+  const canReadCampaigns = usePermission('campaigns.read');
+  const canReadConvocatorias = usePermission('convocatorias.read');
+  const canReadCandidates = usePermission('candidates.read');
+  const canReadBlacklist = usePermission('blacklist.read');
+
+  const { data: campaigns = [] } = useCampaigns(canReadCampaigns);
+  const { data: convocatorias = [] } = useConvocatorias(canReadConvocatorias);
+  const { data: candidates = [] } = useCandidates(canReadCandidates);
+  const { data: blacklist = [] } = useBlacklist(canReadBlacklist);
+
+  const { isDark } = useThemeMode();
+
+  const summary = [
+    { title: 'Campañas', value: campaigns.length, to: '/campaigns' },
+    { title: 'Convocatorias', value: convocatorias.length, to: '/convocatorias' },
+    { title: 'Candidatos', value: candidates.length, to: '/candidates' },
+    { title: 'Blacklist', value: blacklist.length, to: '/blacklist' },
+  ];
+
+  // --------- Métricas derivadas ---------
+  const { funnelCounts, canalSeries, docsPorCampana, contratadosPorCampana } =
+    useMemo(
+      () => buildDashboardMetrics(candidates, convocatorias, campaigns),
+      [candidates, convocatorias, campaigns],
+    );
 
   // --------- Config de gráficos ---------
   const funnelOptions: ApexOptions = {

@@ -7,7 +7,7 @@ from ..request_context import get_user_id
 from ..services import candidate_service
 
 
-class LinkSummarySerializer(serializers.ModelSerializer):
+class ConvocatoriaSummarySerializer(serializers.ModelSerializer):
     campaign_id = serializers.UUIDField(source="campaign.id", read_only=True)
     campaign_nombre = serializers.CharField(
         source="campaign.nombre", read_only=True, default=""
@@ -98,11 +98,15 @@ class CandidateAssignmentSerializer(serializers.ModelSerializer):
 
 
 class CandidateWriteSerializer(serializers.ModelSerializer):
+    convocatoria = serializers.PrimaryKeyRelatedField(
+        source="link", queryset=models.Link.objects.all()
+    )
+
     class Meta:
         model = models.Candidate
         fields = [
             "id",
-            "link",
+            "convocatoria",
             "tipo_documento",
             "numero_documento",
             "apellido_paterno",
@@ -137,14 +141,13 @@ class CandidateWriteSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ("id", "created_at", "updated_at")
-        extra_kwargs = {"link": {"queryset": models.Link.objects.all()}}
 
     def create(self, validated_data):
         request = self.context["request"]
         actor_id = get_user_id(request)
-        link = validated_data.pop("link")
+        convocatoria = validated_data.pop("link")
         return candidate_service.create_candidate(
-            link=link, data=validated_data, actor_id=actor_id
+            link=convocatoria, data=validated_data, actor_id=actor_id
         )
 
     def update(self, instance, validated_data):
@@ -156,13 +159,15 @@ class CandidateWriteSerializer(serializers.ModelSerializer):
 
 
 class CandidateListSerializer(serializers.ModelSerializer):
-    link = LinkSummarySerializer(read_only=True)
+    convocatoria = ConvocatoriaSummarySerializer(source="link", read_only=True)
+    convocatoria_id = serializers.UUIDField(source="link_id", read_only=True)
 
     class Meta:
         model = models.Candidate
         fields = [
             "id",
-            "link",
+            "convocatoria",
+            "convocatoria_id",
             "tipo_documento",
             "numero_documento",
             "nombres_completos",

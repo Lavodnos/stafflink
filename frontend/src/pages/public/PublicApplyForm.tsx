@@ -1,4 +1,3 @@
-import type { ChangeEvent } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 
 import {
@@ -39,29 +38,6 @@ export function PublicApplyForm({
     useWatch({ name: "has_callcenter_experience" }),
   );
   const selectedDistrito = useWatch({ name: "distrito" });
-
-  const handleNumericString =
-    (field: keyof PublicApplyFormData) =>
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const clean = digitsOnly(event.target.value);
-      setValue(field, clean as PublicApplyFormData[typeof field], {
-        shouldValidate: true,
-        shouldDirty: true,
-      });
-      if (event.target.value !== clean) event.target.value = clean;
-    };
-
-  const handleNumericNumber =
-    (field: keyof PublicApplyFormData) =>
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const clean = digitsOnly(event.target.value);
-      const value = clean === "" ? null : Number(clean);
-      setValue(field, value as PublicApplyFormData[typeof field], {
-        shouldValidate: true,
-        shouldDirty: true,
-      });
-      if (event.target.value !== clean) event.target.value = clean;
-    };
 
   return (
     <form
@@ -105,8 +81,8 @@ export function PublicApplyForm({
               {...register("numero_documento", {
                 required: "Campo obligatorio",
                 minLength: 4,
+                setValueAs: (value) => digitsOnly(String(value ?? "")),
               })}
-              onInput={handleNumericString("numero_documento")}
               onBlur={(event) =>
                 setValue("numero_documento", event.target.value.toUpperCase())
               }
@@ -181,8 +157,10 @@ export function PublicApplyForm({
             <input
               className="input"
               inputMode="numeric"
-              {...register("telefono", { required: "Campo obligatorio" })}
-              onInput={handleNumericString("telefono")}
+              {...register("telefono", {
+                required: "Campo obligatorio",
+                setValueAs: (value) => digitsOnly(String(value ?? "")),
+              })}
             />
           </label>
           {errors.telefono && (
@@ -197,8 +175,8 @@ export function PublicApplyForm({
               inputMode="numeric"
               {...register("telefono_referencia", {
                 required: "Campo obligatorio",
+                setValueAs: (value) => digitsOnly(String(value ?? "")),
               })}
-              onInput={handleNumericString("telefono_referencia")}
             />
           </label>
           {errors.telefono_referencia && (
@@ -266,9 +244,12 @@ export function PublicApplyForm({
                 valueAsNumber: true,
                 required: "Campo obligatorio",
                 min: { value: 16, message: "Debe ser mayor o igual a 16" },
+                setValueAs: (value) => {
+                  const clean = digitsOnly(String(value ?? ""));
+                  return clean === "" ? null : Number(clean);
+                },
               })}
               inputMode="numeric"
-              onInput={handleNumericNumber("edad")}
             />
           </label>
           {errors.edad && (
@@ -308,9 +289,12 @@ export function PublicApplyForm({
                 valueAsNumber: true,
                 required: "Campo obligatorio",
                 min: { value: 0, message: "Debe ser 0 o más" },
+                setValueAs: (value) => {
+                  const clean = digitsOnly(String(value ?? ""));
+                  return clean === "" ? null : Number(clean);
+                },
               })}
               inputMode="numeric"
-              onInput={handleNumericNumber("numero_hijos")}
             />
           </label>
           {errors.numero_hijos && (
